@@ -1,0 +1,33 @@
+@page "/gamecontrols"
+@rendermode InteractiveServer
+
+<PageTitle>Game Controls</PageTitle>
+
+<ButtonGrid Buttons="Buttons" />
+
+@code {
+    private static readonly ButtonDef[] Buttons =
+    [
+        // Esc/Pause/Flow block
+        new(0, 0, "Escape", "Game menu", "Esc"),
+        new(0, 1, "Shift", "Start flight", "Left Shift", Color: "limegreen"),
+        new(0, 2, "P", "Pause/Autopilot", "P"),
+
+        // Chat block
+        new(1, 0, "Backspace", "Send message", "Backspace"),
+        new(1, 1, "D", "Extend chat log", "D"),
+
+        // Helpers block
+        new(0, 3, "Q", "Miracle", "Q", Color: "violet"),
+        new(0, 4, "A", "Auto rudder toggle", "A", Color: "violet"),
+        new(1, 3, "H", "Lift helpers", "H", Color: "violet"),
+        new(1, 4, "J", "Task helpers", "J", Color: "violet"),
+
+        // Display/misc block
+        new(3, 0, "Tab", "Show classification", "Tab", Color: "deepskyblue"),
+        new(3, 1, "Semicolon", "Show icons", ";", Color: "deepskyblue"),
+        new(3, 2, "Grave", "HUD toggle", "`", Color: "deepskyblue"),
+        new(3, 3, "S", "Screenshot", "S", Color: "deepskyblue"),
+        new(3, 4, "Shift+D", "Show frame rate (FPS)", "Shift + D", Color: "deepskyblue")
+    ];
+}

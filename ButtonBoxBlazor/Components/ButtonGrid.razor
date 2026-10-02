@@ -1,0 +1,68 @@
+@implements IDisposable
+
+<div class="button-grid">
+    @foreach (var b in Buttons)
+    {
+        <button class="grid-btn" style="@ButtonStyle(b)"
+                @onpointerdown="() => OnDown(b)" @onpointerup="() => OnUp(b)"
+                @onpointerleave="() => OnUp(b)" @onpointercancel="() => OnUp(b)">
+            <span class="btn-icon" style="@IconStyle(b.Icon)"></span>
+            <span class="btn-label">@((MarkupString)b.Label)</span>
+            @if (Settings.ShowKey)
+            {
+                <span class="btn-key">@b.Key</span>
+            }
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<ButtonDef> Buttons { get; set; } = [];
+
+    private readonly ButtonHoldRepeater holdRepeater = new();
+    private readonly HashSet<string> pressedTags = [];
+
+    private static void Send(string tag) => Keyboard.SendTag(tag);
+
+    private void OnDown(ButtonDef b)
+    {
+        if (b.Mode == ButtonMode.Repeat)
+        {
+            holdRepeater.Start(b.Tag, Send);
+        }
+        else if (pressedTags.Add(b.Tag))
+        {
+            // Guards against spurious pointerleave/cancel events firing a key-up without a matching key-down.
+            Keyboard.SendTagDown(b.Tag);
+        }
+    }
+
+    private void OnUp(ButtonDef b)
+    {
+        if (b.Mode == ButtonMode.Repeat)
+        {
+            holdRepeater.Stop(b.Tag);
+        }
+        else if (pressedTags.Remove(b.Tag))
+        {
+            Keyboard.SendTagUp(b.Tag);
+        }
+    }
+
+    private static string ButtonStyle(ButtonDef b)
+    {
+        var style = $"grid-row:{b.Row + 1}; grid-column:{b.Col + 1};";
+        if (b.Color is { } color)
+        {
+            style += $"--btn-color:{color};";
+        }
+        return style;
+    }
+
+    private static string IconStyle(string? icon) =>
+        icon is null ? "visibility:hidden" : $"--icon-src:url('{icon}')";
+
+    public void Dispose() => holdRepeater.Dispose();
+}
+

@@ -1,0 +1,30 @@
+# Build-Ergebnisse
+[Bb]in/
+[Oo]bj/
+publish/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Rider / ReSharper
+.idea/
+*.sln.iml
+
+# Logs
+*.log
+
+# Arbeitsdaten
+workdata/
+
+# OS
+Thumbs.db
+.DS_Store

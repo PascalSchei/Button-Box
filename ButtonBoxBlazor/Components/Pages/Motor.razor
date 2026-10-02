@@ -1,0 +1,16 @@
+@page "/motor"
+@rendermode InteractiveServer
+
+<PageTitle>Motor</PageTitle>
+
+<ButtonGrid Buttons="Buttons" />
+
+@code {
+    private static readonly ButtonDef[] Buttons =
+    [
+        new(0, 0, "K", "Extract motor", "K", Color: "limegreen"),
+        new(0, 1, "L", "Start motor", "L", Color: "limegreen"),
+        new(1, 1, "O", "Throttle up", "O", "icons/plus.svg", Mode: ButtonMode.Repeat, Color: "gold"),
+        new(1, 0, "I", "Throttle down", "I", "icons/minus.svg", Mode: ButtonMode.Repeat, Color: "gold")
+    ];
+}

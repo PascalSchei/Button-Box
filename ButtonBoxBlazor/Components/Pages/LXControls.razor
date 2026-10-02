@@ -1,0 +1,27 @@
+@page "/lxcontrols"
+@rendermode InteractiveServer
+
+<PageTitle>LX Controls</PageTitle>
+
+<ButtonGrid Buttons="Buttons" />
+
+@code {
+    private static readonly ButtonDef[] Buttons =
+    [
+        new(0, 1, "NumPad8", "LX-Stick up", "Num 8", "icons/arrow-up.svg"),
+        new(0, 0, "NumPad7", "Previous mode", "Num 7", "icons/arrow-double-left.svg", Color: "gold"),
+        new(1, 0, "NumPad4", "LX-Stick left<br>Zoom out", "Num 4", "icons/arrow-left.svg"),
+        new(1, 1, "NumPad5", "OK", "Num 5", "icons/ok-circle.svg", Color: "limegreen"),
+        new(2, 1, "NumPad2", "LX-Stick down", "Num 2", "icons/arrow-down.svg"),
+        new(1, 2, "NumPad6", "LX-Stick right<br>Zoom in", "Num 6", "icons/arrow-right.svg"),
+        new(2, 2, "NumPad3", "Abort", "Num 3", "icons/abort-cross.svg", Color: "red"),
+        new(0, 2, "NumPad9", "Next mode", "Num 9", "icons/arrow-double-right.svg", Color: "gold"),
+        new(3, 4, "Prior", "Info Next<br>Turnpoint", "Page Up", "icons/arrow-triangle-up.svg"),
+        new(4, 4, "Next", "Info Previous<br>Turnpoint", "Page Down", "icons/arrow-triangle-down.svg"),
+        new(3, 3, "Slash", "Switch AAT<br>Turnpoint", "/", "icons/arrow-double-right.svg"),
+        new(4, 3, "RightShift", "AAT-Turnpoint Shift On/Off", "Right Shift", "icons/arrow-four-way.svg"),
+        new(0, 4, "Home", "Increase MacCready", "Home", "icons/arrow-triangle-up.svg", Mode: ButtonMode.Repeat, Color: "deepskyblue"),
+        new(1, 4, "End", "Decrease MacCready", "End", "icons/arrow-triangle-down.svg", Mode: ButtonMode.Repeat, Color: "deepskyblue"),
+        new(4, 2, "RightCtrl", "Toggle<br>Climb / Cruise", "Right Ctrl", "icons/refresh.svg")
+    ];
+}

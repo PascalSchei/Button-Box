@@ -1,0 +1,33 @@
+@page "/cameras"
+@rendermode InteractiveServer
+
+<PageTitle>Cameras</PageTitle>
+
+<ButtonGrid Buttons="Buttons" />
+
+@code {
+    private static readonly ButtonDef[] Buttons =
+    [
+        new(0, 0, "NumPadAdd", "Zoom in", "Num +", Color: "gold"),
+        new(0, 1, "Up", "View up", "Up", "icons/arrow-up.svg"),
+        new(0, 2, "NumPadSubtract", "Zoom out", "Num -", Color: "gold"),
+        new(1, 0, "Left", "View left", "Left", "icons/arrow-left.svg"),
+        new(1, 1, "NumPad0", "View center", "Num 0"),
+        new(1, 2, "Right", "View right", "Right", "icons/arrow-right.svg"),
+        new(2, 0, "NumPadDivide", "View snap left", "Num /", Color: "gold"),
+        new(2, 1, "Down", "View down", "Down", "icons/arrow-down.svg"),
+        new(2, 2, "NumPadMultiply", "View snap right", "Num *", Color: "gold"),
+        new(0, 4, "F11", "VR center", "F11"),
+        new(1, 4, "Y", "Panel zoom", "Y"),
+        new(3, 0, "F1", "Cockpit camera", "F1", Color: "deepskyblue"),
+        new(3, 1, "Control+F1", "Cockpit visibility", "Ctrl + F1", Color: "deepskyblue"),
+        new(3, 2, "F2", "External camera", "F2", Color: "deepskyblue"),
+        new(3, 3, "F3", "Chase camera", "F3", Color: "deepskyblue"),
+        new(3, 4, "F4", "Tower camera", "F4", Color: "deepskyblue"),
+        new(4, 0, "F5", "Towplane camera", "F5", Color: "deepskyblue"),
+        new(4, 1, "F6", "Fly-by camera", "F6", Color: "deepskyblue"),
+        new(4, 2, "F7", "Padlock camera", "F7", Color: "deepskyblue"),
+        new(4, 3, "F8", "Net player camera", "F8", Color: "deepskyblue"),
+        new(4, 4, "F9", "Replay Camera", "F9", Color: "deepskyblue")
+    ];
+}

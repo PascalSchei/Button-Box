@@ -1,0 +1,50 @@
+@page "/condorstatus"
+@rendermode InteractiveServer
+@implements IDisposable
+@inject CondorUdpService Telemetry
+@using System.Globalization
+
+<PageTitle>Condor Status</PageTitle>
+
+<div class="condor-status">
+    <span class="status-badge @(Connected ? "connected" : "disconnected")">
+        @(Connected ? "Connected" : "Disconnected")
+    </span>
+
+    <table class="condor-table">
+        <tbody>
+            <tr><td>Time</td><td>@Snapshot.Time.ToString("F2", CultureInfo.InvariantCulture) h</td></tr>
+            <tr><td>Height (CG)</td><td>@Snapshot.Height.ToString("F1", CultureInfo.InvariantCulture) m</td></tr>
+            <tr><td>Wheel height</td><td>@Snapshot.WheelHeight.ToString("F1", CultureInfo.InvariantCulture) m</td></tr>
+            <tr><td>Flaps</td><td>@Snapshot.Flaps.ToString("F0", CultureInfo.InvariantCulture)</td></tr>
+            <tr><td>MacCready</td><td>@Snapshot.MacCready.ToString("F2", CultureInfo.InvariantCulture) m/s</td></tr>
+            <tr><td>Water ballast</td><td>@Snapshot.Water.ToString("F0", CultureInfo.InvariantCulture) kg</td></tr>
+            <tr><td>HUD</td><td>@Snapshot.HudMessages</td></tr>
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private const int RefreshIntervalMs = 1000;
+
+    private Timer? _refreshTimer;
+
+    private CondorTelemetry Snapshot => Telemetry.Current;
+
+    private bool Connected => Telemetry.IsConnected;
+
+    protected override void OnInitialized()
+    {
+        Telemetry.Updated += OnTelemetryUpdated;
+        // Refreshes the badge even when no new packet arrives (e.g. after a disconnect).
+        _refreshTimer = new Timer(_ => InvokeAsync(StateHasChanged), null, RefreshIntervalMs, RefreshIntervalMs);
+    }
+
+    private void OnTelemetryUpdated() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Telemetry.Updated -= OnTelemetryUpdated;
+        _refreshTimer?.Dispose();
+    }
+}
