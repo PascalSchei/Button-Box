@@ -14,11 +14,15 @@
             }
         </button>
     }
+    @ChildContent
 </div>
 
 @code {
     [Parameter, EditorRequired]
     public IReadOnlyList<ButtonDef> Buttons { get; set; } = [];
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
 
     private readonly ButtonHoldRepeater holdRepeater = new();
     private readonly HashSet<string> pressedTags = [];

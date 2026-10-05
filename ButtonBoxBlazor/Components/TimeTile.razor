@@ -1,0 +1,38 @@
+@implements IDisposable
+@inject CondorUdpService Telemetry
+
+<div class="grid-btn time-tile" style="@TileStyle">
+    <span class="time-value">@FormattedTime</span>
+    <span class="btn-label">Time</span>
+</div>
+
+@code {
+    private const int RefreshIntervalMs = 1000;
+
+    [Parameter, EditorRequired]
+    public int Row { get; set; }
+
+    [Parameter, EditorRequired]
+    public int Col { get; set; }
+
+    private Timer? _refreshTimer;
+
+    private string TileStyle => $"grid-row:{Row + 1}; grid-column:{Col + 1};";
+
+    private string FormattedTime => TimeSpan.FromHours(Telemetry.Current.Time % 24).ToString(@"hh\:mm\:ss");
+
+    protected override void OnInitialized()
+    {
+        Telemetry.Updated += OnTelemetryUpdated;
+        // Keeps the seconds ticking even when no new UDP packet arrives.
+        _refreshTimer = new Timer(_ => InvokeAsync(StateHasChanged), null, RefreshIntervalMs, RefreshIntervalMs);
+    }
+
+    private void OnTelemetryUpdated() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Telemetry.Updated -= OnTelemetryUpdated;
+        _refreshTimer?.Dispose();
+    }
+}

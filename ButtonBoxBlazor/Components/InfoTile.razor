@@ -1,0 +1,33 @@
+@implements IDisposable
+@inject CondorUdpService Telemetry
+
+<div class="grid-btn info-tile" style="@TileStyle">
+    <span class="info-value">@Definition.Format(Telemetry.Current)</span>
+    <span class="btn-label">@Definition.Label</span>
+</div>
+
+@code {
+    private const int RefreshIntervalMs = 1000;
+
+    [Parameter, EditorRequired]
+    public InfoTileDef Definition { get; set; } = null!;
+
+    private Timer? _refreshTimer;
+
+    private string TileStyle => $"grid-row:{Definition.Row + 1}; grid-column:{Definition.Col + 1};";
+
+    protected override void OnInitialized()
+    {
+        Telemetry.Updated += OnTelemetryUpdated;
+        // Keeps the display current even when no new UDP packet arrives (e.g. ticking seconds).
+        _refreshTimer = new Timer(_ => InvokeAsync(StateHasChanged), null, RefreshIntervalMs, RefreshIntervalMs);
+    }
+
+    private void OnTelemetryUpdated() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Telemetry.Updated -= OnTelemetryUpdated;
+        _refreshTimer?.Dispose();
+    }
+}

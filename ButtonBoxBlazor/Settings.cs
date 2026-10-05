@@ -8,5 +8,5 @@ public static class Settings
     public static readonly bool ShowKey = false;
 
     /// <summary>Enables the Condor UDP telemetry listener. Disabled for the first deliverable version.</summary>
-    public static readonly bool EnableUdp = false;
+    public static readonly bool EnableUdp = true;
 }

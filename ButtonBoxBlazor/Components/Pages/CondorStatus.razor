@@ -11,26 +11,31 @@
         @(Connected ? "Connected" : "Disconnected")
     </span>
 
-    <table class="condor-table">
-        <tbody>
-            <tr><td>Time</td><td>@Snapshot.Time.ToString("F2", CultureInfo.InvariantCulture) h</td></tr>
-            <tr><td>Height (CG)</td><td>@Snapshot.Height.ToString("F1", CultureInfo.InvariantCulture) m</td></tr>
-            <tr><td>Wheel height</td><td>@Snapshot.WheelHeight.ToString("F1", CultureInfo.InvariantCulture) m</td></tr>
-            <tr><td>Flaps</td><td>@Snapshot.Flaps.ToString("F0", CultureInfo.InvariantCulture)</td></tr>
-            <tr><td>MacCready</td><td>@Snapshot.MacCready.ToString("F2", CultureInfo.InvariantCulture) m/s</td></tr>
-            <tr><td>Water ballast</td><td>@Snapshot.Water.ToString("F0", CultureInfo.InvariantCulture) kg</td></tr>
-            <tr><td>HUD</td><td>@Snapshot.HudMessages</td></tr>
-        </tbody>
-    </table>
+    <ButtonGrid Buttons="Buttons">
+        @foreach (var tile in InfoTiles)
+        {
+            <InfoTile Definition="tile" />
+        }
+    </ButtonGrid>
 </div>
 
 @code {
+    private static readonly ButtonDef[] Buttons = [];
+
+    private static readonly InfoTileDef[] InfoTiles =
+    [
+        new(0, 0, "Time", t => t.Time.ToString("F2", CultureInfo.InvariantCulture) + " h"),
+        new(0, 1, "Height (CG)", t => t.Height.ToString("F1", CultureInfo.InvariantCulture) + " m"),
+        new(0, 2, "Wheel height", t => t.WheelHeight.ToString("F1", CultureInfo.InvariantCulture) + " m"),
+        new(0, 3, "Flaps", t => t.Flaps.ToString("F0", CultureInfo.InvariantCulture)),
+        new(0, 4, "MacCready", t => t.MacCready.ToString("F2", CultureInfo.InvariantCulture) + " m/s"),
+        new(1, 0, "Water ballast", t => t.Water.ToString("F0", CultureInfo.InvariantCulture) + " kg"),
+        new(1, 1, "HUD", t => t.HudMessages)
+    ];
+
     private const int RefreshIntervalMs = 1000;
 
     private Timer? _refreshTimer;
-
-    private CondorTelemetry Snapshot => Telemetry.Current;
-
     private bool Connected => Telemetry.IsConnected;
 
     protected override void OnInitialized()
@@ -48,3 +53,4 @@
         _refreshTimer?.Dispose();
     }
 }
+

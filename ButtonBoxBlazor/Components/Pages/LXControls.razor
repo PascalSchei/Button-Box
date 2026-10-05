@@ -1,11 +1,24 @@
 @page "/lxcontrols"
 @rendermode InteractiveServer
+@using System.Globalization
 
 <PageTitle>LX Controls</PageTitle>
 
-<ButtonGrid Buttons="Buttons" />
+<ButtonGrid Buttons="Buttons">
+    @foreach (var tile in InfoTiles)
+    {
+        <InfoTile Definition="tile" />
+    }
+</ButtonGrid>
 
 @code {
+    private static readonly InfoTileDef[] InfoTiles =
+    [
+        new(3, 0, "Time", t => TimeSpan.FromHours(t.Time % 24).ToString(@"hh\:mm\:ss")),
+        new(3, 1, "MacCready", t => t.MacCready.ToString("F2", CultureInfo.InvariantCulture) + " m/s"),
+        new InfoTileDef(3, 2, "Water", t => t.Water.ToString("F0", CultureInfo.InvariantCulture) + " kg")
+    ];
+
     private static readonly ButtonDef[] Buttons =
     [
         new(0, 1, "NumPad8", "LX-Stick up", "Num 8", "icons/arrow-up.svg"),
