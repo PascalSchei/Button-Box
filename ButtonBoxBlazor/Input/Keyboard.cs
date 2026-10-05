@@ -107,14 +107,14 @@ public static partial class Keyboard
     public static void SendKeyDown(Key key)
     {        
         var flags = KEYEVENTF_SCANCODE | ExtendedFlag(key);
-        Console.WriteLine($"Sending key down: key={key.Name}, ScanCode=0x{key.ScanCode:X}, Extended={key.Extended}, Flags=0x{flags:X}");
+        //Console.WriteLine($"Sending key down: key={key.Name}, ScanCode=0x{key.ScanCode:X}, Extended={key.Extended}, Flags=0x{flags:X}");
         SendInputKey(key.ScanCode, flags);
     }
 
     public static void SendKeyUp(Key key)
     {
         var flags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP | ExtendedFlag(key);
-        Console.WriteLine($"Sending key up: key={key.Name}, ScanCode=0x{key.ScanCode:X}, Extended={key.Extended}, Flags=0x{flags:X}");
+        //Console.WriteLine($"Sending key up: key={key.Name}, ScanCode=0x{key.ScanCode:X}, Extended={key.Extended}, Flags=0x{flags:X}");
         SendInputKey(key.ScanCode, flags);
     }
 

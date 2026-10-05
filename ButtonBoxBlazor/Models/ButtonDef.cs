@@ -1,3 +1,5 @@
+using System.Drawing;
+
 /// <summary>
 /// How a <c>ButtonGrid</c> button reacts to being pressed.
 /// </summary>
@@ -14,4 +16,11 @@ public enum ButtonMode
 /// Describes a single button in a <c>ButtonGrid</c>: its grid position, the key it sends, its function label and the key cap text.
 /// </summary>
 /// <param name="Color">Any CSS color; tints the button face like an LED, border/text/icon stay white.</param>
-public sealed record ButtonDef(int Row, int Col, string Tag, string Label, string Key, string? Icon = null, string? Color = null, ButtonMode Mode = ButtonMode.Hold);
+public sealed record ButtonDef(int Row,
+                               int Col,
+                               string Tag,
+                               string Label,
+                               string Key,
+                               string? Icon = null,
+                               string? Color = "white",
+                               ButtonMode Mode = ButtonMode.Hold);

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Icon: wiper
+  Set: Tabler Icons
+  Author: Paweł Kuna (https://github.com/tabler/tabler-icons)
+  License: MIT (https://github.com/tabler/tabler-icons/blob/master/LICENSE)
+  Source: https://iconify.design
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 24 24"
+     width="24"
+     height="24">
+  <title>Windshield Wiper Icon</title>
+  <metadata>
+    <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+             xmlns:dc="http://purl.org/dc/elements/1.1/"
+             xmlns:cc="http://creativecommons.org/ns#">
+      <cc:Work rdf:about="">
+        <dc:title>Windshield Wiper Icon</dc:title>
+        <dc:description>Minimalist icon of a windshield wiper, ideal for automotive, car maintenance, or weather-related designs. Perfect for apps, websites, or infographics about vehicles or safety.</dc:description>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Paweł Kuna</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:source>https://github.com/tabler/tabler-icons</dc:source>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title>Paweł Kuna</dc:title>
+          </cc:Agent>
+        </dc:rights>
+        <cc:license rdf:resource="https://github.com/tabler/tabler-icons/blob/master/LICENSE"/>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>windshield-wiper</rdf:li>
+            <rdf:li>car-maintenance</rdf:li>
+            <rdf:li>vehicle-icon</rdf:li>
+            <rdf:li>automotive-symbol</rdf:li>
+            <rdf:li>wiper-blade</rdf:li>
+            <rdf:li>car-safety</rdf:li>
+            <rdf:li>windshield-cleaning</rdf:li>
+            <rdf:li>auto-repair</rdf:li>
+            <rdf:li>car-care</rdf:li>
+            <rdf:li>transportation-icon</rdf:li>
+            <rdf:li>weather-symbol</rdf:li>
+            <rdf:li>rain-protection</rdf:li>
+            <rdf:li>car-service</rdf:li>
+            <rdf:li>vehicle-safety</rdf:li>
+            <rdf:li>auto-detailing</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+      </cc:Work>
+      <cc:License rdf:about="https://github.com/tabler/tabler-icons/blob/master/LICENSE">
+        <dc:title>MIT (MIT)</dc:title>
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 18a1 1 0 1 0 2 0a1 1 0 1 0-2 0M3 9l5.5 5.5a5 5 0 0 1 7 0L21 9A12 12 0 0 0 3 9m9 9L9.8 5.2"/>
+</svg>
