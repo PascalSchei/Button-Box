@@ -14,7 +14,7 @@
 
     private Timer? _refreshTimer;
 
-    private string TileStyle => $"grid-row:{Definition.Row + 1}; grid-column:{Definition.Col + 1};";
+    private string TileStyle => $"grid-row:{Definition.Row + 1}; grid-column:{Definition.Col + 1}; --btn-color:{Definition.Color}; color:var(--btn-color, white); background-color:color-mix(in srgb, var(--btn-color, black) 8%, black);";
 
     protected override void OnInitialized()
     {
@@ -31,3 +31,5 @@
         _refreshTimer?.Dispose();
     }
 }
+
+
