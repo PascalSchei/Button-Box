@@ -8,6 +8,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddSingleton<CondorUdpService>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<CondorUdpService>());
+builder.Services.AddSingleton<WindowTransparencyService>();
 
 var app = builder.Build();
 

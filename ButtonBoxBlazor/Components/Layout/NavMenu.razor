@@ -1,57 +1,123 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Condor Soaring</a>
+﻿@rendermode InteractiveServer
+
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div class="navmenu @(_collapsed ? "collapsed" : "")">
+    <div class="top-row ps-3 navbar navbar-dark">
+        <div class="container-fluid d-flex align-items-center justify-content-between">
+            <a class="navbar-brand" href="">Condor Soaring</a>
+            <button type="button" class="collapse-toggler" title="@(_collapsed ? "Expand navigation" : "Collapse navigation")" @onclick="ToggleCollapsed">
+                <span class="bi @(_collapsed ? "bi-chevron-right-nav-menu" : "bi-chevron-left-nav-menu")" aria-hidden="true"></span>
+            </button>
+        </div>
+    </div>
+
+    <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+    <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+        <nav class="nav flex-column">
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All" title="Glider Controls">
+                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> <span class="nav-link-text">Glider Controls</span>
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="lxcontrols" title="LX Controls">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> <span class="nav-link-text">LX Controls</span>
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="motor" title="Motor">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> <span class="nav-link-text">Motor</span>
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="cameras" title="Cameras">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> <span class="nav-link-text">Cameras</span>
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="gamecontrols" title="Game Controls">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> <span class="nav-link-text">Game Controls</span>
+                </NavLink>
+            </div>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="radio" title="Radio">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> <span class="nav-link-text">Radio</span>
+                </NavLink>
+            </div>
+
+            @if (Settings.EnableUdp)
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="condorstatus" title="Condor Status">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> <span class="nav-link-text">Condor Status</span>
+                    </NavLink>
+                </div>
+            }
+            <div class="nav-item px-3">
+                <button @ref="_fullscreenButton" type="button" class="nav-link fullscreen-toggle" title="Enter fullscreen" aria-label="Enter fullscreen" aria-pressed="false" disabled>
+                    <svg class="bi fullscreen-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <path class="fullscreen-enter" d="M6 1H1v5 M10 1h5v5 M1 10v5h5 M15 10v5h-5" />
+                        <path class="fullscreen-exit" d="M1 6h5V1 M10 1v5h5 M6 15v-5H1 M15 10h-5v5" />
+                    </svg>
+                    <span class="nav-link-text" data-fullscreen-label>Fullscreen</span>
+                </button>
+                <span @ref="_fullscreenStatus" class="fullscreen-status" role="status"></span>
+            </div>
+        </nav>
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+@code {
+    private bool _collapsed;
+    private ElementReference _fullscreenButton;
+    private ElementReference _fullscreenStatus;
+    private IJSObjectReference? _fullscreenModule;
+    private IJSObjectReference? _fullscreenController;
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Glider Controls
-            </NavLink>
-        </div>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="lxcontrols">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> LX Controls
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="motor">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Motor
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="cameras">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Cameras
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="gamecontrols">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Game Controls
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="radio">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Radio
-            </NavLink>
-        </div>
-
-        @if (Settings.EnableUdp)
+        try
         {
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="condorstatus">
-                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Condor Status
-                </NavLink>
-            </div>
+            _fullscreenModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/fullscreen.js");
+            _fullscreenController = await _fullscreenModule.InvokeAsync<IJSObjectReference>("initialize", _fullscreenButton, _fullscreenStatus);
         }
-    </nav>
-</div>
+        catch (JSDisconnectedException)
+        {
+            // The circuit closed while the module was loading.
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_fullscreenController is not null)
+            {
+                await _fullscreenController.InvokeVoidAsync("dispose");
+                await _fullscreenController.DisposeAsync();
+            }
+
+            if (_fullscreenModule is not null)
+            {
+                await _fullscreenModule.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            // The circuit is already closed.
+        }
+    }
+
+    private void ToggleCollapsed() => _collapsed = !_collapsed;
+}
 

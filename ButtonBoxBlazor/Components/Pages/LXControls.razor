@@ -1,6 +1,7 @@
 @page "/lxcontrols"
 @rendermode InteractiveServer
 @using System.Globalization
+@inject WindowTransparencyService Transparency
 
 <PageTitle>LX Controls</PageTitle>
 
@@ -9,13 +10,35 @@
     {
         <InfoTile Definition="tile" />
     }
+    <button class="grid-btn" style="grid-row:6; grid-column:1; --btn-color:violet;" @onclick="() => Change(-Step)">
+        <span class="btn-icon" style="--icon-src:url('icons/minus.svg')"></span>
+        <span class="btn-label">LX more transparent</span>
+    </button>
+    <button class="grid-btn" style="grid-row:6; grid-column:2; --btn-color:violet;" @onclick="() => Change(Step)">
+        <span class="btn-icon" style="--icon-src:url('icons/plus.svg')"></span>
+        <span class="btn-label">LX less transparent</span>
+    </button>
+    <div class="grid-btn info-tile" style="grid-row:6; grid-column:3;">
+        <span class="info-value">@(opacity is { } p ? $"{p} %" : "-")</span>
+        <span class="btn-label">@(error ?? "LX opacity")</span>
+    </div>
 </ButtonGrid>
 
 @code {
+    private const int Step = 10;
+
+    private int? opacity;
+    private string? error;
+
+    private void Change(int delta)
+    {
+        (opacity, error) = Transparency.ChangeOpacity(delta);
+    }
+
     private static readonly InfoTileDef[] InfoTiles =
     [
         new(3, 0, "Time", t => TimeSpan.FromHours(t.Time % 24).ToString(@"hh\:mm\:ss")),
-        new(3, 1, "MacCready", t => t.MacCready.ToString("F2", CultureInfo.InvariantCulture) + " m/s"),
+        new(3, 1, "MacCready m/s", t => t.MacCready.ToString("F2", CultureInfo.InvariantCulture)),
         new InfoTileDef(3, 2, "Water", t => t.Water.ToString("F0", CultureInfo.InvariantCulture) + " kg")
     ];
 

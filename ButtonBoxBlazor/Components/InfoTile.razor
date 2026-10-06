@@ -1,7 +1,7 @@
 @implements IDisposable
 @inject CondorUdpService Telemetry
 
-<div class="grid-btn info-tile" style="@TileStyle">
+<div class="info-tile grid-item" style="@TileStyle">
     <span class="info-value">@Definition.Format(Telemetry.Current)</span>
     <span class="btn-label">@Definition.Label</span>
 </div>

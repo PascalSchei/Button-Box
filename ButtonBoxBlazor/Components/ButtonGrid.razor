@@ -3,7 +3,7 @@
 <div class="button-grid">
     @foreach (var b in Buttons)
     {
-        <button class="grid-btn" style="@ButtonStyle(b)"
+        <button class="grid-btn grid-item" style="@ButtonStyle(b)"
                 @onpointerdown="() => OnDown(b)" @onpointerup="() => OnUp(b)"
                 @onpointerleave="() => OnUp(b)" @onpointercancel="() => OnUp(b)">
             <span class="btn-icon" style="@IconStyle(b.Icon)"></span>
