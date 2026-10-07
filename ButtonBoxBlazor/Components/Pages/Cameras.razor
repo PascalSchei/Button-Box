@@ -8,26 +8,48 @@
 @code {
     private static readonly ButtonDef[] Buttons =
     [
-        new(0, 0, "NumPadAdd", "Zoom in", "Num +", Color: "gold"),
+        new(0, 0, "NumPadAdd", "Zoom in", "Num +", "icons/zoom-in.svg", Color: "gold"),
         new(0, 1, "Up", "View up", "Up", "icons/arrow-up.svg"),
-        new(0, 2, "NumPadSubtract", "Zoom out", "Num -", Color: "gold"),
+        new(0, 2, "NumPadSubtract", "Zoom out", "Num -", "icons/zoom-out.svg", Color: "gold"),
         new(1, 0, "Left", "View left", "Left", "icons/arrow-left.svg"),
-        new(1, 1, "NumPad0", "View center", "Num 0"),
+        new(1, 1, "NumPad0", "View center", "Num 0", "icons/center.svg"),
         new(1, 2, "Right", "View right", "Right", "icons/arrow-right.svg"),
-        new(2, 0, "NumPadDivide", "View snap left", "Num /", Color: "gold"),
+        new(2, 0, "NumPadDivide", "View snap left", "Num /", "icons/snap-left.svg", Color: "gold"),
         new(2, 1, "Down", "View down", "Down", "icons/arrow-down.svg"),
-        new(2, 2, "NumPadMultiply", "View snap right", "Num *", Color: "gold"),
-        new(0, 4, "F11", "VR center", "F11"),
-        new(1, 4, "Y", "Panel zoom", "Y"),
-        new(3, 0, "F1", "Cockpit camera", "F1", Color: "deepskyblue"),
-        new(3, 1, "Control+F1", "Cockpit visibility", "Ctrl + F1", Color: "deepskyblue"),
-        new(3, 2, "F2", "External camera", "F2", Color: "deepskyblue"),
-        new(3, 3, "F3", "Chase camera", "F3", Color: "deepskyblue"),
-        new(3, 4, "F4", "Tower camera", "F4", Color: "deepskyblue"),
-        new(4, 0, "F5", "Towplane camera", "F5", Color: "deepskyblue"),
-        new(4, 1, "F6", "Fly-by camera", "F6", Color: "deepskyblue"),
-        new(4, 2, "F7", "Padlock camera", "F7", Color: "deepskyblue"),
-        new(4, 3, "F8", "Net player camera", "F8", Color: "deepskyblue"),
-        new(4, 4, "F9", "Replay Camera", "F9", Color: "deepskyblue")
+        new(2, 2, "NumPadMultiply", "View snap right", "Num *", "icons/snap-right.svg", Color: "gold"),
+        new(0, 4, "F11", "VR center", "F11", "icons/vr.svg"),
+        new(1, 4, "Y", "Panel zoom", "Y", "icons/panel-zoom.svg"),
+        new(3, 0, "F1", "Cockpit camera", "F1", "icons/cockpit.svg", Color: "deepskyblue"),
+        new(3, 1, "Control+F1", "Cockpit visibility", "Ctrl + F1", "icons/eye.svg", Color: "deepskyblue"),
+        new(3, 2, "F2", "External camera", "F2", "icons/camera.svg", Color: "deepskyblue"),
+        new(3, 3, "F3", "Chase camera", "F3", "icons/video.svg", Color: "deepskyblue"),
+        new(3, 4, "F4", "Tower camera", "F4", "icons/tower.svg", Color: "deepskyblue"),
+        new(4, 0, "F5", "Towplane camera", "F5", "icons/towplane.svg", Color: "deepskyblue"),
+        new(4, 1, "F6", "Fly-by camera", "F6", "icons/flyby.svg", Color: "deepskyblue"),
+        new(4, 2, "F7", "Padlock camera", "F7", "icons/padlock.svg", Color: "deepskyblue"),
+        new(4, 3, "F8", "Net player camera", "F8", "icons/network.svg", Color: "deepskyblue"),
+        new(4, 4, "F9", "Replay Camera", "F9", "icons/replay.svg", Color: "deepskyblue"),
+
+        // Motor block
+        new(0, 6, "K", "Extract motor", "K", "icons/propeller-extract.svg", Color: "limegreen"),
+        new(0, 7, "L", "Start motor", "L", "icons/propeller.svg", Color: "limegreen"),
+        new(1, 7, "O", "Throttle up", "O", "icons/plus.svg", Mode: ButtonMode.Repeat, Color: "limegreen"),
+        new(1, 6, "I", "Throttle down", "I", "icons/minus.svg", Mode: ButtonMode.Repeat, Color: "limegreen"),
+
+        // Radio block
+        new(3, 6, "Backslash", "Freq up", "\\", "icons/plus.svg", Mode: ButtonMode.Repeat),
+        new(4, 6, "Quote", "Freq down", "'", "icons/minus.svg", Mode: ButtonMode.Repeat),
+        new(3, 7, "D4", "Radio volume up", "4", "icons/plus.svg", Mode: ButtonMode.Repeat),
+        new(4, 7, "D3", "Radio volume down", "3", "icons/minus.svg", Mode: ButtonMode.Repeat),
+        new(3, 8, "D2", "Microphone volume up", "2", "icons/plus.svg", Mode: ButtonMode.Repeat),
+        new(4, 8, "D1", "Microphone volume down", "1", "icons/minus.svg", Mode: ButtonMode.Repeat),
+        new(5, 7, "Space", "Push To Talk", "Space", "icons/microphone.svg", Color: "deepskyblue"),
+
+        // Display/misc block (from Game Controls)
+        new(6, 0, "Tab", "Show classification", "Tab", "icons/list.svg", Color: "hotpink"),
+        new(6, 1, "Semicolon", "Show icons", ";", "icons/grid.svg", Color: "hotpink"),
+        new(6, 2, "Grave", "HUD toggle", "`", "icons/hud.svg", Color: "hotpink"),
+        new(6, 3, "S", "Screenshot", "S", "icons/screenshot.svg", Color: "hotpink"),
+        new(6, 4, "Shift+D", "Show frame rate (FPS)", "Shift + D", "icons/fps.svg", Color: "hotpink")
     ];
 }
