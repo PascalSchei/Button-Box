@@ -1,0 +1,49 @@
+@implements IDisposable
+@inject IKeyboardService Keyboard
+
+<button class="grid-btn grid-item" style="@Definition.Style"
+        @onpointerdown="OnDown" @onpointerup="OnUp"
+        @onpointerleave="OnUp" @onpointercancel="OnUp">
+    <span class="btn-icon" style="@IconStyle"></span>
+    <span class="btn-label">@((MarkupString)Definition.Label)</span>
+    @if (Settings.ShowKey)
+    {
+        <span class="btn-key">@Definition.KeyCaption</span>
+    }
+</button>
+
+@code {
+    [Parameter, EditorRequired]
+    public ButtonDef Definition { get; set; } = null!;
+
+    private readonly ButtonHoldRepeater holdRepeater = new();
+
+    private string IconStyle =>
+        Definition.Icon is null ? "visibility:hidden" : $"--icon-src:url('{Definition.Icon}')";
+
+    private void OnDown()
+    {
+        if (Definition.Mode == ButtonMode.Repeat)
+        {
+            holdRepeater.Start(Definition.Tag, Keyboard.SendTag);
+        }
+        else
+        {
+            Keyboard.SendTagDown(Definition.Tag);
+        }
+    }
+
+    private void OnUp()
+    {
+        if (Definition.Mode == ButtonMode.Repeat)
+        {
+            holdRepeater.Stop(Definition.Tag);
+        }
+        else
+        {
+            Keyboard.SendTagUp(Definition.Tag);
+        }
+    }
+
+    public void Dispose() => holdRepeater.Dispose();
+}

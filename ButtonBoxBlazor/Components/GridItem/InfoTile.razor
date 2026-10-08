@@ -1,0 +1,13 @@
+@inherits TelemetryComponentBase
+
+<div class="info-tile grid-item" style="@TileStyle">
+    <span class="info-value">@Definition.Format(Telemetry.Current)</span>
+    <span class="btn-label">@Definition.Label</span>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public InfoTileDef Definition { get; set; } = null!;
+
+    private string TileStyle => Definition.Style + "color:var(--btn-color, white); background-color:color-mix(in srgb, var(--btn-color, black) 8%, black);";
+}

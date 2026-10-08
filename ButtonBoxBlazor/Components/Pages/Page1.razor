@@ -1,0 +1,7 @@
+@page "/"
+@page "/page1"
+@rendermode InteractiveServer
+
+<PageTitle>@PageConfig.GetName(1)</PageTitle>
+
+<ItemGrid Items="PageConfig.GetItems(1)" />

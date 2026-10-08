@@ -1,7 +1,6 @@
 @page "/condorstatus"
 @rendermode InteractiveServer
-@implements IDisposable
-@inject CondorUdpService Telemetry
+@inherits TelemetryComponentBase
 @using System.Globalization
 
 <PageTitle>Condor Status</PageTitle>
@@ -11,17 +10,10 @@
         @(Connected ? "Connected" : "Disconnected")
     </span>
 
-    <ButtonGrid Buttons="Buttons">
-        @foreach (var tile in InfoTiles)
-        {
-            <InfoTile Definition="tile" />
-        }
-    </ButtonGrid>
+    <ItemGrid Items="InfoTiles" />
 </div>
 
 @code {
-    private static readonly ButtonDef[] Buttons = [];
-
     private static readonly InfoTileDef[] InfoTiles =
     [
         new(0, 0, "Time", t => t.Time.ToString("F2", CultureInfo.InvariantCulture) + " h"),
@@ -33,24 +25,6 @@
         new(1, 1, "HUD", t => t.HudMessages)
     ];
 
-    private const int RefreshIntervalMs = 1000;
-
-    private Timer? _refreshTimer;
     private bool Connected => Telemetry.IsConnected;
-
-    protected override void OnInitialized()
-    {
-        Telemetry.Updated += OnTelemetryUpdated;
-        // Refreshes the badge even when no new packet arrives (e.g. after a disconnect).
-        _refreshTimer = new Timer(_ => InvokeAsync(StateHasChanged), null, RefreshIntervalMs, RefreshIntervalMs);
-    }
-
-    private void OnTelemetryUpdated() => InvokeAsync(StateHasChanged);
-
-    public void Dispose()
-    {
-        Telemetry.Updated -= OnTelemetryUpdated;
-        _refreshTimer?.Dispose();
-    }
 }
 

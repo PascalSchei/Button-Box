@@ -1,7 +1,5 @@
-using System.Drawing;
-
 /// <summary>
-/// How a <c>ButtonGrid</c> button reacts to being pressed.
+/// How an <c>ItemGrid</c> button reacts to being pressed.
 /// </summary>
 public enum ButtonMode
 {
@@ -13,14 +11,15 @@ public enum ButtonMode
 }
 
 /// <summary>
-/// Describes a single button in a <c>ButtonGrid</c>: its grid position, the key it sends, its function label and the key cap text.
+/// Describes a single button in an <c>ItemGrid</c>: its grid position, the key it sends, its function label and the key cap text.
 /// </summary>
-/// <param name="Color">Any CSS color; tints the button face like an LED, border/text/icon stay white.</param>
+/// <param name="Tag">Key name (or '+'-joined combo) understood by <see cref="Key.TryParse"/>.</param>
+/// <param name="KeyCaption">Text shown on the key cap when <c>Settings.ShowKey</c> is enabled.</param>
 public sealed record ButtonDef(int Row,
                                int Col,
                                string Tag,
                                string Label,
-                               string Key,
+                               string KeyCaption,
                                string? Icon = null,
                                string? Color = "white",
-                               ButtonMode Mode = ButtonMode.Hold);
+                               ButtonMode Mode = ButtonMode.Hold) : GridItemDef(Row, Col, Color);

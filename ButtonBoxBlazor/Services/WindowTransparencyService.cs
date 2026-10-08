@@ -18,10 +18,25 @@ public sealed class WindowTransparencyService : IDisposable
     // Windows where WS_EX_LAYERED was set by this service; restored on dispose.
     private readonly HashSet<IntPtr> _layeredByUs = [];
 
+    /// <summary>Last applied opacity in percent; null until the first successful change.</summary>
+    public int? Percent { get; private set; }
+
+    /// <summary>Error message of the last change attempt; null if it succeeded.</summary>
+    public string? Error { get; private set; }
+
+    /// <summary>Raised after every <see cref="ChangeOpacity"/> call, on the caller's thread.</summary>
+    public event Action? Changed;
+
     /// <summary>
-    /// Changes the opacity by <paramref name="deltaPercent"/>. Returns the new opacity in percent, or an error message.
+    /// Changes the opacity by <paramref name="deltaPercent"/> and updates <see cref="Percent"/> / <see cref="Error"/>.
     /// </summary>
-    public (int? Percent, string? Error) ChangeOpacity(int deltaPercent)
+    public void ChangeOpacity(int deltaPercent)
+    {
+        (Percent, Error) = Apply(deltaPercent);
+        Changed?.Invoke();
+    }
+
+    private (int? Percent, string? Error) Apply(int deltaPercent)
     {
         lock (_lock)
         {

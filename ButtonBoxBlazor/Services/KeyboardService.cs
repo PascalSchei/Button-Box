@@ -1,26 +1,42 @@
-using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using System.Threading;
 
-public static partial class Keyboard
+public interface IKeyboardService
+{
+    /// <summary>
+    /// Sends a key referenced by name (a <see cref="Key"/> name). Multiple names joined with '+'
+    /// (e.g. "Control+F1") are sent as a modifier combo.
+    /// </summary>
+    void SendTag(string tag);
+
+    /// <summary>
+    /// Presses every key in the tag without releasing it (e.g. Push To Talk). Ignored while the tag is already held.
+    /// </summary>
+    void SendTagDown(string tag);
+
+    /// <summary>
+    /// Releases a tag pressed via <see cref="SendTagDown"/>. Ignored if the tag is not held.
+    /// </summary>
+    void SendTagUp(string tag);
+}
+
+/// <summary>
+/// Injects keyboard input into the foreground application via Win32 SendInput; releases held keys on dispose.
+/// </summary>
+public sealed class KeyboardService : IKeyboardService, IDisposable
 {
     private const uint INPUT_KEYBOARD = 1;
     private const uint KEYEVENTF_KEYUP = 0x0002;
     private const uint KEYEVENTF_SCANCODE = 0x0008;
     private const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
 
-    // Some games poll keyboard state on a fixed tick instead of reacting to individual
-    // events, so a zero-delay down/up burst for modifier combos (e.g. "Control+F1") can
-    // be missed entirely even though the same combo works fine from a physical keyboard.
+    // Some games poll keyboard state on a fixed tick, so a zero-delay down/up burst for modifier combos can be missed.
     private const int ComboKeyDelayMs = 15;
 
-    /// <summary>
-    /// Sends a key referenced by name, matching the button "Tag" convention used by the
-    /// WPF Buttonbox app: a <see cref="Key"/> name. Multiple key names joined with '+'
-    /// (e.g. "Control+F1") are sent as a modifier combo.
-    /// </summary>
-    public static void SendTag(string tag)
+    private readonly object _lock = new();
+    private readonly HashSet<string> _heldTags = [];
+
+    public void SendTag(string tag)
     {
         if (!TryParseTag(tag, out var keys))
         {
@@ -47,17 +63,62 @@ public static partial class Keyboard
         }
     }
 
-    /// <summary>
-    /// Presses down (without releasing) every key in the tag, outermost modifier first, for
-    /// press/hold/release controls like "Push To Talk". Pair with <see cref="SendTagUp"/>.
-    /// </summary>
-    public static void SendTagDown(string tag)
+    public void SendTagDown(string tag)
     {
+        // Guards against spurious pointerleave/cancel events releasing a key that was never pressed.
+        lock (_lock)
+        {
+            if (!_heldTags.Add(tag))
+            {
+                return;
+            }
+        }
+
         if (!TryParseTag(tag, out var keys))
         {
+            lock (_lock) _heldTags.Remove(tag);
             return;
         }
 
+        PressAll(keys);
+    }
+
+    public void SendTagUp(string tag)
+    {
+        lock (_lock)
+        {
+            if (!_heldTags.Remove(tag))
+            {
+                return;
+            }
+        }
+
+        if (TryParseTag(tag, out var keys))
+        {
+            ReleaseAll(keys);
+        }
+    }
+
+    public void Dispose()
+    {
+        string[] held;
+        lock (_lock)
+        {
+            held = [.. _heldTags];
+            _heldTags.Clear();
+        }
+
+        foreach (var tag in held)
+        {
+            if (TryParseTag(tag, out var keys))
+            {
+                ReleaseAll(keys);
+            }
+        }
+    }
+
+    private static void PressAll(Key[] keys)
+    {
         for (int i = 0; i < keys.Length; i++)
         {
             SendKeyDown(keys[i]);
@@ -65,16 +126,8 @@ public static partial class Keyboard
         }
     }
 
-    /// <summary>
-    /// Releases every key in the tag in reverse order. Pair with <see cref="SendTagDown"/>.
-    /// </summary>
-    public static void SendTagUp(string tag)
+    private static void ReleaseAll(Key[] keys)
     {
-        if (!TryParseTag(tag, out var keys))
-        {
-            return;
-        }
-
         for (int i = keys.Length - 1; i >= 0; i--)
         {
             SendKeyUp(keys[i]);
@@ -98,25 +151,11 @@ public static partial class Keyboard
         return true;
     }
 
-    public static void SendKey(Key key)
-    {
-        SendKeyDown(key);
-        SendKeyUp(key);
-    }
+    private static void SendKeyDown(Key key) =>
+        SendInputKey(key.ScanCode, KEYEVENTF_SCANCODE | ExtendedFlag(key));
 
-    public static void SendKeyDown(Key key)
-    {        
-        var flags = KEYEVENTF_SCANCODE | ExtendedFlag(key);
-        //Console.WriteLine($"Sending key down: key={key.Name}, ScanCode=0x{key.ScanCode:X}, Extended={key.Extended}, Flags=0x{flags:X}");
-        SendInputKey(key.ScanCode, flags);
-    }
-
-    public static void SendKeyUp(Key key)
-    {
-        var flags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP | ExtendedFlag(key);
-        //Console.WriteLine($"Sending key up: key={key.Name}, ScanCode=0x{key.ScanCode:X}, Extended={key.Extended}, Flags=0x{flags:X}");
-        SendInputKey(key.ScanCode, flags);
-    }
+    private static void SendKeyUp(Key key) =>
+        SendInputKey(key.ScanCode, KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP | ExtendedFlag(key));
 
     private static uint ExtendedFlag(Key key) =>
         key.Extended ? KEYEVENTF_EXTENDEDKEY : 0;

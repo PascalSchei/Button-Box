@@ -1,0 +1,21 @@
+@implements IDisposable
+
+<div class="grid-item info-tile" style="@TileStyle">
+    <span class="info-value">@(Transparency.Percent is { } value ? $"{value} %" : "-")</span>
+    <span class="btn-label">@(Transparency.Error ?? Definition.Label)</span>
+</div>
+
+@code {
+    [Inject] private WindowTransparencyService Transparency { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public OpacityInfoTileDef Definition { get; set; } = null!;
+
+    private string TileStyle => Definition.Style + "color:var(--btn-color, white); background-color:color-mix(in srgb, var(--btn-color, black) 8%, black);";
+
+    protected override void OnInitialized() => Transparency.Changed += OnChanged;
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Transparency.Changed -= OnChanged;
+}

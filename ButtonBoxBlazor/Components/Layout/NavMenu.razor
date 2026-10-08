@@ -17,23 +17,15 @@
 
     <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
         <nav class="nav flex-column">
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="" Match="NavLinkMatch.All" title="LX Controls">
-                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> <span class="nav-link-text">LX Controls</span>
-                </NavLink>
-            </div>
-
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="cameras" title="Cameras">
-                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> <span class="nav-link-text">Cameras</span>
-                </NavLink>
-            </div>
-
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="gamecontrols" title="Game Controls">
-                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> <span class="nav-link-text">Game Controls</span>
-                </NavLink>
-            </div>
+            @foreach (var page in PageConfig.VisiblePages)
+            {
+                var name = PageConfig.GetName(page);
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="@(page == 1 ? "" : $"page{page}")" Match="@(page == 1 ? NavLinkMatch.All : NavLinkMatch.Prefix)" title="@name">
+                        <span class="bi @(page == 1 ? "bi-house-door-fill-nav-menu" : "bi-list-nested-nav-menu")" aria-hidden="true"></span> <span class="nav-link-text">@name</span>
+                    </NavLink>
+                </div>
+            }
 
             @if (Settings.EnableUdp)
             {

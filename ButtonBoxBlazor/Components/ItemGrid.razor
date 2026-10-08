@@ -1,0 +1,25 @@
+<div class="button-grid">
+    @foreach (var item in Items)
+    {
+        switch (item)
+        {
+            case ButtonDef button:
+                <KeyButton Definition="button" />
+                break;
+            case InfoTileDef tile:
+                <InfoTile Definition="tile" />
+                break;
+            case OpacityButtonDef action:
+                <OpacityButton Definition="action" />
+                break;
+            case OpacityInfoTileDef opacityTile:
+                <OpacityInfoTile Definition="opacityTile" />
+                break;
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IEnumerable<GridItemDef> Items { get; set; } = [];
+}
