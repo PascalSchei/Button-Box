@@ -59,8 +59,8 @@ public static class BlockCatalog
     // Esc/Pause/Flow
     private static readonly GridBlock LxFlow = new("lx-flow", "Menu / Start / Pause",
         new ButtonDef(0, 0, "Escape", "Game menu", "Esc", "icons/menu.svg"),
-        new ButtonDef(0, 1, "Shift", "Start flight", "Left Shift", "icons/start.svg", Color: "limegreen"),
-        new ButtonDef(0, 2, "P", "Pause/Autopilot", "P", "icons/pause.svg"));
+        new ButtonDef(1, 0, "Shift", "Start flight", "Left Shift", "icons/start.svg", Color: "limegreen"),
+        new ButtonDef(2, 0, "P", "Pause/Autopilot", "P", "icons/pause.svg"));
 
     private static readonly GridBlock LxChat = new("lx-chat", "Chat",
         new ButtonDef(0, 0, "Backspace", "Send message", "Backspace", "icons/send.svg"),
@@ -68,13 +68,13 @@ public static class BlockCatalog
 
     private static readonly GridBlock LxBlue = new("lx-blue", "Release / Smoke / Gear",
         new ButtonDef(0, 0, "R", "Release", "R", "icons/disconnect.svg", Color: "deepskyblue"),
-        new ButtonDef(0, 1, "T", "Smoke", "T", "icons/air.svg", Color: "deepskyblue"),
-        new ButtonDef(0, 2, "D0", "G Meter reset", "0", "icons/refresh.svg", Color: "deepskyblue"),
-        new ButtonDef(0, 3, "E", "Check time", "E", "icons/time.svg", Color: "deepskyblue"),
-        new ButtonDef(1, 0, "G", "Landing Gear", "G", "icons/wheel.svg", Color: "deepskyblue"),
-        new ButtonDef(1, 1, "W", "Water", "W", "icons/drop.svg", Color: "deepskyblue"),
-        new ButtonDef(1, 2, "Comma", "Bug wipers", ",", "icons/wiper.svg", Color: "deepskyblue"),
-        new ButtonDef(1, 3, "LeftCtrl", "Swap controls", "Left Ctrl", "icons/swap.svg", Color: "deepskyblue"));
+        new ButtonDef(1, 0, "T", "Smoke", "T", "icons/air.svg", Color: "deepskyblue"),
+        new ButtonDef(2, 0, "D0", "G Meter reset", "0", "icons/refresh.svg", Color: "deepskyblue"),
+        new ButtonDef(0, 1, "E", "Check time", "E", "icons/time.svg", Color: "deepskyblue"),
+        new ButtonDef(1, 1, "G", "Landing Gear", "G", "icons/wheel.svg", Color: "deepskyblue"),
+        new ButtonDef(2, 1, "W", "Water", "W", "icons/drop.svg", Color: "deepskyblue"),
+        new ButtonDef(0, 2, "Comma", "Bug wipers", ",", "icons/wiper.svg", Color: "deepskyblue"),
+        new ButtonDef(1, 2, "LeftCtrl", "Swap controls", "Left Ctrl", "icons/swap.svg", Color: "deepskyblue"));
 
     private static readonly GridBlock LxHelpers = new("lx-helpers", "Helpers",
         new ButtonDef(0, 0, "Q", "Miracle", "Q", "icons/miracle.svg", Color: "violet"),
@@ -128,10 +128,10 @@ public static class BlockCatalog
     // Display/misc (from Game Controls)
     private static readonly GridBlock CamMisc = new("cam-misc", "Display / Screenshot",
         new ButtonDef(0, 0, "Tab", "Show classification", "Tab", "icons/list.svg", Color: "hotpink"),
-        new ButtonDef(0, 1, "Semicolon", "Show icons", ";", "icons/grid.svg", Color: "hotpink"),
-        new ButtonDef(0, 2, "Grave", "HUD toggle", "`", "icons/hud.svg", Color: "hotpink"),
-        new ButtonDef(0, 3, "S", "Screenshot", "S", "icons/screenshot.svg", Color: "hotpink"),
-        new ButtonDef(0, 4, "Shift+D", "Show frame rate (FPS)", "Shift + D", "icons/fps.svg", Color: "hotpink"));
+        new ButtonDef(1, 0, "Semicolon", "Show icons", ";", "icons/grid.svg", Color: "hotpink"),
+        new ButtonDef(2, 1, "Grave", "HUD toggle", "`", "icons/hud.svg", Color: "hotpink"),
+        new ButtonDef(0, 1, "S", "Screenshot", "S", "icons/screenshot.svg", Color: "hotpink"),
+        new ButtonDef(1, 1, "Shift+D", "Show frame rate (FPS)", "Shift + D", "icons/fps.svg", Color: "hotpink"));
 
     // Airbrakes / Trimmer / Flaps
     private static readonly GridBlock GameFlight = new("game-flight", "Airbrakes / Trimmer / Flaps",

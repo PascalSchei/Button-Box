@@ -2,8 +2,8 @@ using System.Text.Json;
 using Microsoft.JSInterop;
 
 /// <summary>
-/// Per-device (circuit) layout state: grid size, block selection and display options, persisted in the browser's localStorage.
-/// Pages are the global block order filtered by the selection and packed into the grid.
+/// Per-device (circuit) layout state: grid size and display options, persisted in the browser's localStorage.
+/// Pages use the server-wide block order and selection and are packed into the grid.
 /// </summary>
 public sealed class LayoutService : IAsyncDisposable
 {
@@ -13,7 +13,6 @@ public sealed class LayoutService : IAsyncDisposable
     private readonly IJSRuntime _js;
     private IJSObjectReference? _module;
     private Task? _loadTask;
-    private HashSet<string> _selected = [.. BlockCatalog.All.Select(b => b.Id)];
 
     public LayoutService(BlockOrderStore orderStore, IJSRuntime js)
     {
@@ -42,26 +41,12 @@ public sealed class LayoutService : IAsyncDisposable
 
     public IReadOnlyList<LayoutPage> Pages { get; private set; }
 
-    public bool IsSelected(string blockId) => _selected.Contains(blockId);
-
     public Task EnsureLoadedAsync() => _loadTask ??= LoadAsync();
 
     public async Task SetGridAsync(int cols, int rows)
     {
         Cols = GridPreset.ClampCols(cols);
         Rows = GridPreset.ClampRows(rows);
-        await ChangeAsync();
-    }
-
-    public async Task SetBlockSelectedAsync(string blockId, bool selected)
-    {
-        var copy = new HashSet<string>(_selected);
-        if (selected ? !copy.Add(blockId) : !copy.Remove(blockId))
-        {
-            return;
-        }
-
-        _selected = copy;
         await ChangeAsync();
     }
 
@@ -171,11 +156,6 @@ public sealed class LayoutService : IAsyncDisposable
             Rows = GridPreset.ClampRows(data.Rows);
         }
 
-        if (data.Blocks is not null)
-        {
-            _selected = [.. data.Blocks.Where(BlockCatalog.ById.ContainsKey)];
-        }
-
         if (data.Show is { } show && new ButtonDisplay(show.Icon, show.Text, show.Key) is { IsValid: true } display)
         {
             Display = display;
@@ -196,7 +176,7 @@ public sealed class LayoutService : IAsyncDisposable
             return;
         }
 
-        var data = new DeviceData(Cols, Rows, [.. _selected], new DisplayData(Display.ShowIcon, Display.ShowText, Display.ShowKey), ShowBlockOutline);
+        var data = new DeviceData(Cols, Rows, new DisplayData(Display.ShowIcon, Display.ShowText, Display.ShowKey), ShowBlockOutline);
         try
         {
             await _module.InvokeVoidAsync("save", JsonSerializer.Serialize(data, Json));
@@ -209,8 +189,7 @@ public sealed class LayoutService : IAsyncDisposable
 
     private void Recompute()
     {
-        var selected = _selected;
-        Pages = LayoutPacker.Pack(_orderStore.Order.Where(selected.Contains).Select(id => BlockCatalog.ById[id]), Cols, Rows);
+        Pages = LayoutPacker.Pack(_orderStore.Order.Where(_orderStore.IsSelected).Select(id => BlockCatalog.ById[id]), Cols, Rows);
     }
 
     private void OnOrderChanged()
@@ -219,7 +198,7 @@ public sealed class LayoutService : IAsyncDisposable
         Changed?.Invoke();
     }
 
-    private sealed record DeviceData(int Cols, int Rows, string[]? Blocks, DisplayData? Show, bool? ShowBlockOutline = null);
+    private sealed record DeviceData(int Cols, int Rows, DisplayData? Show, bool? ShowBlockOutline = null);
 
     private sealed record DisplayData(bool Icon, bool Text, bool Key);
 

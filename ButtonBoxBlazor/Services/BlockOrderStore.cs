@@ -7,8 +7,10 @@ public sealed class BlockOrderStore
 {
     private readonly object _lock = new();
     private readonly string _filePath;
+    private readonly string _selectionFilePath;
     private readonly ILogger<BlockOrderStore> _logger;
     private string[] _order;
+    private HashSet<string> _selected;
 
     public BlockOrderStore(IConfiguration configuration, ILogger<BlockOrderStore> logger)
     {
@@ -20,7 +22,9 @@ public sealed class BlockOrderStore
         }
 
         _filePath = Path.Combine(directory, "block-order.json");
+        _selectionFilePath = Path.Combine(directory, "block-selection.json");
         _order = Normalize(Load());
+        _selected = LoadSelection();
     }
 
     /// <summary>Raised on the calling thread after the order changed.</summary>
@@ -35,6 +39,34 @@ public sealed class BlockOrderStore
                 return _order;
             }
         }
+    }
+
+    public bool IsSelected(string id)
+    {
+        lock (_lock)
+        {
+            return _selected.Contains(id);
+        }
+    }
+
+    public void SetSelected(string id, bool selected)
+    {
+        if (!BlockCatalog.ById.ContainsKey(id))
+        {
+            return;
+        }
+
+        lock (_lock)
+        {
+            if (selected ? !_selected.Add(id) : !_selected.Remove(id))
+            {
+                return;
+            }
+
+            SaveSelection([.. _selected]);
+        }
+
+        Changed?.Invoke();
     }
 
     /// <summary>Moves a block by <paramref name="delta"/> positions (clamped to the list bounds).</summary>
@@ -81,6 +113,22 @@ public sealed class BlockOrderStore
         }
     }
 
+    private HashSet<string> LoadSelection()
+    {
+        try
+        {
+            return File.Exists(_selectionFilePath)
+                ? (JsonSerializer.Deserialize<string[]>(File.ReadAllText(_selectionFilePath)) ?? [])
+                    .Where(BlockCatalog.ById.ContainsKey).ToHashSet()
+                : [.. BlockCatalog.All.Select(block => block.Id)];
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        {
+            _logger.LogWarning(ex, "Block selection '{Path}' could not be read, using the default selection.", _selectionFilePath);
+            return [.. BlockCatalog.All.Select(block => block.Id)];
+        }
+    }
+
     private void Save(string[] order)
     {
         try
@@ -93,6 +141,21 @@ public sealed class BlockOrderStore
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _logger.LogError(ex, "Block order '{Path}' could not be saved.", _filePath);
+        }
+    }
+
+    private void SaveSelection(string[] selection)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(_selectionFilePath)!);
+            var temp = _selectionFilePath + ".tmp";
+            File.WriteAllText(temp, JsonSerializer.Serialize(selection));
+            File.Move(temp, _selectionFilePath, overwrite: true);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _logger.LogError(ex, "Block selection '{Path}' could not be saved.", _selectionFilePath);
         }
     }
 }

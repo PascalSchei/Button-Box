@@ -73,15 +73,15 @@
                 <input type="checkbox" checked="@Layout.ShowBlockOutline"
                        @onchange="e => Layout.SetBlockOutlineAsync((bool)e.Value!)" /> Show block outline
             </label>
-            <p>The checkboxes apply to this device only. The order applies to all devices.</p>
+            <p>Block selection and order apply to all devices.</p>
             @for (var i = 0; i < order.Count; i++)
             {
                 var block = BlockCatalog.ById[order[i]];
                 var index = i;
                 <div class="settings-block">
                     <label class="settings-check">
-                        <input type="checkbox" checked="@Layout.IsSelected(block.Id)"
-                               @onchange="e => Layout.SetBlockSelectedAsync(block.Id, (bool)e.Value!)" />
+                        <input type="checkbox" checked="@OrderStore.IsSelected(block.Id)"
+                               @onchange="e => OrderStore.SetSelected(block.Id, (bool)e.Value!)" />
                         @block.Name (@block.Width x @block.Height)
                         @if (block.Width > Layout.Cols || block.Height > Layout.Rows)
                         {
