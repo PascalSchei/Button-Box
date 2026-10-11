@@ -1,12 +1,17 @@
 /// <summary>
-/// Items placed together as a block. Item positions are relative to the block origin (<paramref name="row"/>, <paramref name="col"/>), so a block moves by changing only its origin.
+/// Items placed together as a block. Item positions are relative to the block origin, so a block moves by changing only the origin passed to <see cref="Placed"/>.
 /// </summary>
-public sealed class GridBlock(int row, int col, params GridItemDef[] items)
+/// <param name="id">Stable kebab-case identifier used in persisted settings.</param>
+/// <param name="name">Display name in the settings page.</param>
+public sealed class GridBlock(string id, string name, params GridItemDef[] items)
 {
-    public int Row { get; } = row;
-    public int Col { get; } = col;
+    public string Id { get; } = id;
+    public string Name { get; } = name;
     public GridItemDef[] Items { get; } = items;
 
+    public int Width { get; } = items.Max(i => i.Col) + 1;
+    public int Height { get; } = items.Max(i => i.Row) + 1;
+
     /// <summary>Items with their positions translated to absolute grid coordinates.</summary>
-    public IEnumerable<GridItemDef> Placed() => Items.Select(i => i with { Row = Row + i.Row, Col = Col + i.Col });
+    public IEnumerable<GridItemDef> Placed(int row, int col) => Items.Select(i => i with { Row = row + i.Row, Col = col + i.Col, BlockId = Id });
 }

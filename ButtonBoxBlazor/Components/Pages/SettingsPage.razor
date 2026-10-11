@@ -1,0 +1,157 @@
+@page "/settings"
+@rendermode InteractiveServer
+@implements IDisposable
+@inject LayoutService Layout
+@inject BlockOrderStore OrderStore
+
+<PageTitle>Settings</PageTitle>
+
+<div class="settings-page">
+    @if (!Layout.IsLoaded)
+    {
+        <p>Loading...</p>
+    }
+    else
+    {
+        var display = Layout.Display;
+        var order = OrderStore.Order;
+
+        <section>
+            <h2>Grid</h2>
+            <div class="settings-row">
+                <label for="preset">Preset</label>
+                <select id="preset" class="form-select" value="@CurrentPreset" @onchange="OnPresetChanged">
+                    @foreach (var preset in GridPreset.All)
+                    {
+                        <option value="@preset.Name">@preset.Name (@preset.Cols x @preset.Rows)</option>
+                    }
+                    <option value="@CustomPreset">Custom</option>
+                </select>
+            </div>
+            <div class="settings-row">
+                <label for="cols">Columns (@GridPreset.MinCols-@GridPreset.MaxCols)</label>
+                <input id="cols" type="number" class="form-control" min="@GridPreset.MinCols" max="@GridPreset.MaxCols" value="@Layout.Cols"
+                       @onchange="e => SetGridAsync(e.Value, Layout.Rows)" />
+            </div>
+            <div class="settings-row">
+                <label for="rows">Rows (@GridPreset.MinRows-@GridPreset.MaxRows)</label>
+                <input id="rows" type="number" class="form-control" min="@GridPreset.MinRows" max="@GridPreset.MaxRows" value="@Layout.Rows"
+                       @onchange="e => SetGridAsync(Layout.Cols, e.Value)" />
+            </div>
+            <p>Pages: @Layout.Pages.Count</p>
+
+            <button type="button" class="btn btn-secondary" @onclick="MeasureAsync">Measure device</button>
+            @if (_suggestion is { } suggestion)
+            {
+                <p class="mt-2">
+                    Suggestion: @suggestion.Cols x @suggestion.Rows (viewport @_viewportWidth x @_viewportHeight px, @MinCell px per cell)
+                </p>
+                <button type="button" class="btn btn-primary" @onclick="ApplySuggestionAsync">Apply</button>
+                <button type="button" class="btn btn-secondary" @onclick="() => _suggestion = null">Discard</button>
+            }
+        </section>
+
+        <section>
+            <h2>Button display</h2>
+            <label class="settings-check">
+                <input type="checkbox" checked="@display.ShowIcon" disabled="@(display is { ShowIcon: true, ShowText: false, ShowKey: false })"
+                       @onchange="e => SetDisplayAsync(display with { ShowIcon = (bool)e.Value! })" /> Icon
+            </label>
+            <label class="settings-check">
+                <input type="checkbox" checked="@display.ShowText" disabled="@(display is { ShowIcon: false, ShowText: true, ShowKey: false })"
+                       @onchange="e => SetDisplayAsync(display with { ShowText = (bool)e.Value! })" /> Text
+            </label>
+            <label class="settings-check">
+                <input type="checkbox" checked="@display.ShowKey" disabled="@(display is { ShowIcon: false, ShowText: false, ShowKey: true })"
+                       @onchange="e => SetDisplayAsync(display with { ShowKey = (bool)e.Value! })" /> Key
+            </label>
+        </section>
+
+        <section>
+            <h2>Blocks</h2>
+            <label class="settings-check">
+                <input type="checkbox" checked="@Layout.ShowBlockOutline"
+                       @onchange="e => Layout.SetBlockOutlineAsync((bool)e.Value!)" /> Show block outline
+            </label>
+            <p>The checkboxes apply to this device only. The order applies to all devices.</p>
+            @for (var i = 0; i < order.Count; i++)
+            {
+                var block = BlockCatalog.ById[order[i]];
+                var index = i;
+                <div class="settings-block">
+                    <label class="settings-check">
+                        <input type="checkbox" checked="@Layout.IsSelected(block.Id)"
+                               @onchange="e => Layout.SetBlockSelectedAsync(block.Id, (bool)e.Value!)" />
+                        @block.Name (@block.Width x @block.Height)
+                        @if (block.Width > Layout.Cols || block.Height > Layout.Rows)
+                        {
+                            <span class="text-warning">does not fit the grid</span>
+                        }
+                    </label>
+                    <span class="settings-block-buttons">
+                        <button type="button" class="btn btn-secondary" disabled="@(index == 0)" aria-label="Move @block.Name up"
+                                @onclick="() => OrderStore.Move(block.Id, -1)">&uarr;</button>
+                        <button type="button" class="btn btn-secondary" disabled="@(index == order.Count - 1)" aria-label="Move @block.Name down"
+                                @onclick="() => OrderStore.Move(block.Id, 1)">&darr;</button>
+                    </span>
+                </div>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    private const int MinCell = 70;
+    private const string CustomPreset = "custom";
+
+    private (int Cols, int Rows)? _suggestion;
+    private int _viewportWidth;
+    private int _viewportHeight;
+
+    private string CurrentPreset =>
+        GridPreset.All.FirstOrDefault(p => p.Cols == Layout.Cols && p.Rows == Layout.Rows)?.Name ?? CustomPreset;
+
+    protected override void OnInitialized() => Layout.Changed += OnLayoutChanged;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Layout.EnsureLoadedAsync();
+        }
+    }
+
+    private Task OnPresetChanged(ChangeEventArgs e) =>
+        GridPreset.All.FirstOrDefault(p => p.Name == e.Value as string) is { } preset
+            ? Layout.SetGridAsync(preset.Cols, preset.Rows)
+            : Task.CompletedTask;
+
+    private Task SetGridAsync(object? cols, object? rows) =>
+        int.TryParse(cols?.ToString(), out var c) && int.TryParse(rows?.ToString(), out var r)
+            ? Layout.SetGridAsync(c, r)
+            : Task.CompletedTask;
+
+    private Task SetDisplayAsync(ButtonDisplay display) => Layout.SetDisplayAsync(display);
+
+    private async Task MeasureAsync()
+    {
+        if (await Layout.GetViewportAsync() is { } viewport)
+        {
+            (_viewportWidth, _viewportHeight) = viewport;
+            _suggestion = GridPreset.Suggest(viewport.Width, viewport.Height, MinCell);
+        }
+    }
+
+    private async Task ApplySuggestionAsync()
+    {
+        if (_suggestion is { } suggestion)
+        {
+            _suggestion = null;
+            await Layout.SetGridAsync(suggestion.Cols, suggestion.Rows);
+        }
+    }
+
+    private void OnLayoutChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Layout.Changed -= OnLayoutChanged;
+}

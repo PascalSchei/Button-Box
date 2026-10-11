@@ -2,6 +2,7 @@
 
 @implements IAsyncDisposable
 @inject IJSRuntime JS
+@inject LayoutService Layout
 
 <div class="navmenu @(_collapsed ? "collapsed" : "")">
     <div class="top-row ps-3 navbar navbar-dark">
@@ -17,15 +18,23 @@
 
     <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
         <nav class="nav flex-column">
-            @foreach (var page in PageConfig.VisiblePages)
+            @if (Layout.IsLoaded)
             {
-                var name = PageConfig.GetName(page);
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="@(page == 1 ? "" : $"page{page}")" Match="@(page == 1 ? NavLinkMatch.All : NavLinkMatch.Prefix)" title="@name">
-                        <span class="bi @(page == 1 ? "bi-house-door-fill-nav-menu" : "bi-list-nested-nav-menu")" aria-hidden="true"></span> <span class="nav-link-text">@name</span>
-                    </NavLink>
-                </div>
+                foreach (var number in Enumerable.Range(1, Layout.Pages.Count))
+                {
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="@(number == 1 ? "" : $"page/{number}")" Match="NavLinkMatch.All" title="@number">
+                            <span class="bi @(number == 1 ? "bi-house-door-fill-nav-menu" : "bi-list-nested-nav-menu")" aria-hidden="true"></span> <span class="nav-link-text">@number</span>
+                        </NavLink>
+                    </div>
+                }
             }
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="settings" title="Settings">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> <span class="nav-link-text">Settings</span>
+                </NavLink>
+            </div>
 
             @if (Settings.EnableUdp)
             {
@@ -56,9 +65,13 @@
     private IJSObjectReference? _fullscreenModule;
     private IJSObjectReference? _fullscreenController;
 
+    protected override void OnInitialized() => Layout.Changed += OnLayoutChanged;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
+
+        await Layout.EnsureLoadedAsync();
 
         try
         {
@@ -71,8 +84,11 @@
         }
     }
 
+    private void OnLayoutChanged() => InvokeAsync(StateHasChanged);
+
     public async ValueTask DisposeAsync()
     {
+        Layout.Changed -= OnLayoutChanged;
         try
         {
             if (_fullscreenController is not null)

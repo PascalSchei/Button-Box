@@ -1,25 +1,57 @@
-<div class="button-grid">
-    @foreach (var item in Items)
-    {
-        switch (item)
+<div class="button-grid @DisplayClass @(_outline.Length > 0 ? "has-block-outline" : "")" style="--cols:@Cols; --rows:@Rows;">
+    <CascadingValue Value="Display">
+        @foreach (var item in Items)
         {
-            case ButtonDef button:
-                <KeyButton Definition="button" />
-                break;
-            case InfoTileDef tile:
-                <InfoTile Definition="tile" />
-                break;
-            case OpacityButtonDef action:
-                <OpacityButton Definition="action" />
-                break;
-            case OpacityInfoTileDef opacityTile:
-                <OpacityInfoTile Definition="opacityTile" />
-                break;
+            switch (item)
+            {
+                case ButtonDef button:
+                    <KeyButton Definition="button" />
+                    break;
+                case InfoTileDef tile:
+                    <InfoTile Definition="tile" />
+                    break;
+                case OpacityButtonDef action:
+                    <OpacityButton Definition="action" />
+                    break;
+                case OpacityInfoTileDef opacityTile:
+                    <OpacityInfoTile Definition="opacityTile" />
+                    break;
+            }
         }
+    </CascadingValue>
+    @foreach (var cell in _outline)
+    {
+        <div class="grid-block-frame" style="@cell.Style()" aria-hidden="true"></div>
     }
 </div>
 
 @code {
     [Parameter, EditorRequired]
     public IEnumerable<GridItemDef> Items { get; set; } = [];
+
+    [Parameter]
+    public int Cols { get; set; } = 10;
+
+    [Parameter]
+    public int Rows { get; set; } = 7;
+
+    [Parameter]
+    public ButtonDisplay Display { get; set; } = ButtonDisplay.Default;
+
+    [Parameter]
+    public bool ShowBlockOutline { get; set; } = true;
+
+    private GridOutlineCell[] _outline = [];
+
+    protected override void OnParametersSet() => _outline = ShowBlockOutline ? [.. GridBlockOutline.Build(Items)] : [];
+
+    // Lets the stylesheet size icon, text and key to the cell for the chosen combination.
+    private string DisplayClass => (Display.ShowIcon, Display.ShowText, Display.ShowKey) switch
+    {
+        (true, false, false) => "only-icon",
+        (false, true, false) => "only-text",
+        (false, false, true) => "only-key",
+        (true, true, true) => "show-all",
+        _ => ""
+    };
 }

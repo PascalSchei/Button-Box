@@ -1,0 +1,45 @@
+@page "/"
+@page "/page/{N:int}"
+@rendermode InteractiveServer
+@implements IDisposable
+@inject LayoutService Layout
+
+<PageTitle>@Number</PageTitle>
+
+@if (!Layout.IsLoaded)
+{
+    <p>Loading...</p>
+}
+else if (Layout.Pages.Count == 0)
+{
+    <p>No blocks fit the grid. <a href="settings">Open settings</a></p>
+}
+else if (Number < 1 || Number > Layout.Pages.Count)
+{
+    <p>This page does not exist.</p>
+}
+else
+{
+    <ItemGrid Items="Layout.Pages[Number - 1].Items" Cols="Layout.Cols" Rows="Layout.Rows" Display="Layout.Display" ShowBlockOutline="Layout.ShowBlockOutline" />
+}
+
+@code {
+    [Parameter]
+    public int? N { get; set; }
+
+    private int Number => N ?? 1;
+
+    protected override void OnInitialized() => Layout.Changed += OnLayoutChanged;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Layout.EnsureLoadedAsync();
+        }
+    }
+
+    private void OnLayoutChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Layout.Changed -= OnLayoutChanged;
+}

@@ -2,12 +2,18 @@
 
 <div class="info-tile grid-item" style="@TileStyle">
     <span class="info-value">@Definition.Format(Telemetry.Current)</span>
-    <span class="btn-label">@Definition.Label</span>
+    @if (Display.ShowText)
+    {
+        <span class="btn-label">@Definition.Label</span>
+    }
 </div>
 
 @code {
     [Parameter, EditorRequired]
     public InfoTileDef Definition { get; set; } = null!;
+
+    [CascadingParameter]
+    public ButtonDisplay Display { get; set; } = ButtonDisplay.Default;
 
     private string TileStyle => Definition.Style + "color:var(--btn-color, white); background-color:color-mix(in srgb, var(--btn-color, black) 8%, black);";
 }

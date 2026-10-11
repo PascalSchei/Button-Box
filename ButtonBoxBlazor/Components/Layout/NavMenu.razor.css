@@ -204,3 +204,100 @@
 .navmenu.collapsed .bi {
     margin-right: 0;
 }
+
+/* Niedrige Fenster: Navigation proportional zur Hoehe verkleinern (Hoehe/Breite der Sidebar, Eintraege, Icons). */
+@media (orientation: landscape) and (max-height: 720px) {
+    .navmenu {
+        --nav-top: clamp(2.25rem, 9dvh, 3.5rem);
+        --nav-row: clamp(1.75rem, 8dvh, 3rem);
+        --nav-icon: clamp(0.875rem, 4dvh, 1.25rem);
+        width: clamp(11rem, 45dvh, 250px);
+    }
+
+    .navmenu.collapsed {
+        width: clamp(2.75rem, 12dvh, 4.5rem);
+        overflow: hidden;
+    }
+
+    .top-row {
+        height: var(--nav-top);
+        min-height: var(--nav-top);
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    .navbar-brand {
+        font-size: clamp(0.8rem, 3.4dvh, 1.1rem);
+    }
+
+    .collapse-toggler {
+        width: calc(var(--nav-top) * 0.6);
+        height: calc(var(--nav-top) * 0.6);
+    }
+
+    .bi {
+        width: var(--nav-icon);
+        height: var(--nav-icon);
+        margin-right: 0.5rem;
+    }
+
+    .collapse-toggler .bi,
+    .navmenu.collapsed .bi {
+        margin-right: 0;
+    }
+
+    .nav-scrollable {
+        height: calc(100dvh - var(--nav-top));
+    }
+
+    .nav-item {
+        font-size: clamp(0.7rem, 3dvh, 0.9rem);
+        padding-bottom: 0.2rem;
+        padding-left: 0.5rem !important; /* ueberschreibt Bootstrap px-3 */
+        padding-right: 0.5rem !important;
+    }
+
+    .nav-item:first-of-type {
+        padding-top: 0.4rem;
+    }
+
+    .nav-item:last-of-type {
+        padding-bottom: 0.4rem;
+    }
+
+    .nav-item ::deep .nav-link {
+        height: var(--nav-row);
+        line-height: var(--nav-row);
+    }
+}
+
+/* Eingeklappt: Toggler und Eintraege mittig, Hervorhebung fuellt die Eintragsbreite. */
+@media (orientation: landscape) {
+    .navmenu.collapsed {
+        overflow: hidden;
+    }
+
+    .navmenu.collapsed .top-row {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    .navmenu.collapsed .container-fluid {
+        padding-left: 0;
+        padding-right: 0;
+        justify-content: center !important; /* ueberschreibt Bootstrap justify-content-between */
+    }
+
+    .navmenu.collapsed .nav-item {
+        padding-left: 0.4rem !important;
+        padding-right: 0.4rem !important;
+    }
+
+    .navmenu.collapsed .nav-item ::deep .nav-link {
+        width: var(--nav-row, 3rem);
+        height: var(--nav-row, 3rem);
+        margin: 0 auto;
+        padding: 0;
+        justify-content: center;
+    }
+}

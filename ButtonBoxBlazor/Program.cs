@@ -1,5 +1,7 @@
 using ButtonBoxBlazor.Components;
 
+BlockCatalog.Validate();
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -10,6 +12,8 @@ builder.Services.AddSingleton<CondorUdpService>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<CondorUdpService>());
 builder.Services.AddSingleton<WindowTransparencyService>();
 builder.Services.AddSingleton<IKeyboardService, KeyboardService>();
+builder.Services.AddSingleton<BlockOrderStore>();
+builder.Services.AddScoped<LayoutService>();
 
 var app = builder.Build();
 

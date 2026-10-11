@@ -4,9 +4,6 @@
 /// </summary>
 public static class Settings
 {
-    /// <summary>Shows the key-cap label (e.g. "Num 8") on every button when true.</summary>
-    public static readonly bool ShowKey = false;
-
     /// <summary>Enables the Condor UDP telemetry listener. Disabled for the first deliverable version.</summary>
     public static readonly bool EnableUdp = true;
 }
