@@ -85,12 +85,13 @@ html, body {
 
 .grid-btn {
     background-color: color-mix(in srgb, var(--btn-color, black) 8%, black);
-    border: 0.3em solid currentColor;
+    border: 0.3em solid currentColor;    
     color: var(--btn-color, white);
     touch-action: manipulation;
 }
 
 .grid-item {
+    
     position: relative;
     z-index: 1;
     display: flex;
@@ -100,7 +101,8 @@ html, body {
     gap: var(--space-sm);
     font-size: 1em;
     font-weight: bold;
-    border-radius: 1em;
+    border-radius: 2em;
+    margin: 0.4em;
     text-align: center;
     touch-action: manipulation;
     container-type: size;
@@ -376,13 +378,14 @@ h1:focus {
 }
 
 .grid-block-title {
-    align-self: start;
-    justify-self: start;
+    align-self: end;
+    justify-self: center;
     z-index: 2;
+    transform: translateY(calc(70% - var(--gap) / 2));
     max-width: 100%;
     padding: 0.1em 0.4em;
     border-radius: var(--radius-sm);
-    background: #d6d6d6;
+    background: gray;
     color: black;
     font-size: clamp(0.55rem, 1.2vw, 0.8rem);
     line-height: 1.2;
