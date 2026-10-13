@@ -10,24 +10,13 @@ A touch-friendly control panel for [Condor Soaring](https://www.condorsoaring.co
 2. A **second device** (tablet, phone, or another notebook — Android, iOS, Windows, doesn't matter, as long as it has a modern web browser) connects to that web server **over your local network (Wi-Fi/LAN)**.
 3. You tap buttons on the second device, and the matching keyboard button is triggered on the flight PC — exactly as if you had pressed that key yourself.
 
-```mermaid
-flowchart LR
-    subgraph PC["Flight PC (Windows 10/11)"]
-        Condor["Condor Soaring"]
-        App["ButtonBoxBlazor.exe"]
-    end
-    subgraph Device["Tablet / Phone / Notebook"]
-        Browser["Web browser (shows the button grid)"]
-    end
-
-    Browser <-->|"Wi-Fi / LAN (HTTP)"| App
-    App -->|"simulated key presses"| Condor
-```
+<img src="res/image10.jpg" width="600" >
 
 
 ## Features
 
-- **Keyboard buttons** — Every Condor default key binding (airbrakes, flaps, radio, gear, ...) as a large, touch-friendly button. Press-and-hold buttons repeat while you keep your finger down.
+- **Keyboard buttons** — 
+    Every Condor default key binding (airbrakes, flaps, radio, gear, ...) as a large, touch-friendly button. Press-and-hold buttons repeat while you keep your finger down.
 - **Live Condor data via UDP** — Time, height, flaps, MacCready and water ballast are shown as info tiles, fed directly by Condor's UDP output. No more looking for small cockpit gauges. See [Setting up UDP.ini](#setting-up-udpini).
 - **LX instrument controls, including Opacity** — Operate the LX navigation device from your tablet and adjust the opacity of the LX display on the flight PC with dedicated buttons.
 - **Your own Condor key bindings** — The app reads your Condor `controls.ini` and uses the keyboard keys you assigned there, so the buttons keep working when you changed Condor's default keys. See [Using your controls.ini](#using-your-controlsini).
@@ -111,3 +100,32 @@ LogToFile=0
 ## Known limitations
 
 - Only **keyboard key presses** are simulated. Gamepad/vJoy support is not planned, since it would make installation and setup considerably more complex for little gain.
+
+# FAQ
+
+## I’ve already assigned the button on my joystick
+If the button is already assigned on your joystick, you shouldn’t need to have it on the Button Box as well. Otherwise, you should use Joystick Gremlin. Set the button back to its keyboard command, then use Joystick Gremlin to assign that keyboard key to your joystick.
+
+# Demo
+
+### Page 1
+<img src="res/image03.jpg" width="600" >
+
+### Page 2
+<img src="res/image04.jpg" width="600" >
+
+### Icons only
+<img src="res/image07.jpg" width="600" >
+
+### I want it all
+<img src="res/image08.jpg" width="600" >
+
+### Know your needs
+<img src="res/image09.jpg" width="600" >
+
+### Setup your and style
+<img src="res/image05.jpg" width="600" >
+
+### Select and organize your blocks
+<img src="res/image06.jpg" width="600" >
+
