@@ -19,8 +19,4 @@ public sealed record GridPreset(string Name, int Cols, int Rows)
     public static int ClampCols(int cols) => Math.Clamp(cols, MinCols, MaxCols);
 
     public static int ClampRows(int rows) => Math.Clamp(rows, MinRows, MaxRows);
-
-    /// <summary>Grid size for a viewport given in pixels and a minimum cell size.</summary>
-    public static (int Cols, int Rows) Suggest(int width, int height, int minCell) =>
-        (ClampCols(width / minCell), ClampRows(height / minCell));
 }

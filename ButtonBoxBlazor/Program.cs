@@ -13,6 +13,8 @@ builder.Services.AddHostedService(provider => provider.GetRequiredService<Condor
 builder.Services.AddSingleton<WindowTransparencyService>();
 builder.Services.AddSingleton<IKeyboardService, KeyboardService>();
 builder.Services.AddSingleton<BlockOrderStore>();
+builder.Services.AddSingleton<LayoutSettingsStore>();
+builder.Services.AddSingleton<ControlsStore>();
 builder.Services.AddScoped<LayoutService>();
 
 var app = builder.Build();

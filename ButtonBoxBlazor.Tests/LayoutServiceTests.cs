@@ -1,74 +1,95 @@
-using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.JSInterop;
 
 public class LayoutServiceTests
 {
-    [Theory]
-    [InlineData(null, true)]
-    [InlineData("{\"cols\":10,\"rows\":7}", true)]
-    [InlineData("{\"showBlockOutline\":false}", false)]
-    [InlineData("{\"showBlockOutline\":true}", true)]
-    public async Task BlockOutline_LoadsDevicePreferenceAndDefaultsForOldSettings(string? json, bool expected)
+    [Fact]
+    public void Defaults_WithoutStoredSettings()
     {
-        var storage = new DeviceStorage(json);
-        await using var layout = CreateLayout(storage);
+        using var directory = new TempDirectory();
+        var layout = CreateLayout(CreateStore(directory));
 
-        await layout.EnsureLoadedAsync();
-
-        Assert.Equal(expected, layout.ShowBlockOutline);
+        Assert.Equal(GridPreset.Tablet.Cols, layout.Cols);
+        Assert.Equal(GridPreset.Tablet.Rows, layout.Rows);
+        Assert.True(layout.ShowBlockOutline);
+        Assert.Equal(ButtonDisplay.Default, layout.Display);
+        Assert.All(BlockCatalog.All, b => Assert.True(layout.IsSelected(b.Id)));
     }
 
     [Fact]
-    public async Task BlockOutline_ToggleNotifiesAndPersistsAcrossReloads()
+    public void Grid_ChangeAppliesToAllLayoutsAndNotifies()
     {
-        var storage = new DeviceStorage(null);
-        await using var layout = CreateLayout(storage);
-        await layout.EnsureLoadedAsync();
+        using var directory = new TempDirectory();
+        var store = CreateStore(directory);
+        var first = CreateLayout(store);
+        var second = CreateLayout(store);
+        var changes = 0;
+        second.Changed += () => changes++;
+
+        first.SetGrid(12, 9);
+
+        Assert.Equal((12, 9), (second.Cols, second.Rows));
+        Assert.Equal(1, changes);
+    }
+
+    [Fact]
+    public void Settings_PersistAcrossRestarts()
+    {
+        using var directory = new TempDirectory();
+        var layout = CreateLayout(CreateStore(directory));
+
+        layout.SetGrid(12, 9);
+        layout.SetBlockOutline(false);
+        layout.SetDisplay(new ButtonDisplay(ShowIcon: false, ShowText: true, ShowKey: true));
+        layout.SetBlockSelected("lx-pad", false);
+
+        var reloaded = CreateLayout(CreateStore(directory));
+        Assert.Equal((12, 9), (reloaded.Cols, reloaded.Rows));
+        Assert.False(reloaded.ShowBlockOutline);
+        Assert.Equal(new ButtonDisplay(false, true, true), reloaded.Display);
+        Assert.False(reloaded.IsSelected("lx-pad"));
+        Assert.True(reloaded.IsSelected("lx-turnpoint"));
+    }
+
+    [Fact]
+    public void Grid_IsClamped_AndUnchangedValuesDoNotNotify()
+    {
+        using var directory = new TempDirectory();
+        var layout = CreateLayout(CreateStore(directory));
         var changes = 0;
         layout.Changed += () => changes++;
 
-        foreach (var show in new[] { false, true })
-        {
-            await layout.SetBlockOutlineAsync(show);
-            Assert.Equal(show, layout.ShowBlockOutline);
-            using var saved = JsonDocument.Parse(storage.Json!);
-            Assert.Equal(show, saved.RootElement.GetProperty("showBlockOutline").GetBoolean());
-            await using var reloaded = CreateLayout(storage);
-            await reloaded.EnsureLoadedAsync();
-            Assert.Equal(show, reloaded.ShowBlockOutline);
-        }
+        layout.SetGrid(1000, 1);
+        Assert.Equal((GridPreset.MaxCols, GridPreset.MinRows), (layout.Cols, layout.Rows));
 
-        Assert.Equal(2, changes);
+        layout.SetGrid(1000, 1);
+        layout.SetDisplay(new ButtonDisplay(false, false, false));
+
+        Assert.Equal(1, changes);
     }
 
-    private static LayoutService CreateLayout(DeviceStorage storage)
+    private static LayoutSettingsStore CreateStore(TempDirectory directory) =>
+        new(Configure(directory.Path), NullLogger<LayoutSettingsStore>.Instance);
+
+    private static LayoutService CreateLayout(LayoutSettingsStore settings)
     {
-        var configuration = new ConfigurationBuilder().AddInMemoryCollection(
-            new Dictionary<string, string?> { ["ButtonBox:DataPath"] = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()) }).Build();
-        return new LayoutService(new BlockOrderStore(configuration, NullLogger<BlockOrderStore>.Instance), storage);
+        var orderConfiguration = Configure(System.IO.Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString()));
+        return new LayoutService(new BlockOrderStore(orderConfiguration, NullLogger<BlockOrderStore>.Instance), settings);
     }
 
-    private sealed class DeviceStorage(string? json) : IJSRuntime, IJSObjectReference
+    private static IConfiguration Configure(string dataPath) =>
+        new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?> { ["ButtonBox:DataPath"] = dataPath }).Build();
+
+    private sealed class TempDirectory : IDisposable
     {
-        public string? Json { get; private set; } = json;
+        public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString());
 
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
-            InvokeAsync<TValue>(identifier, CancellationToken.None, args);
-
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args)
+        public void Dispose()
         {
-            if (identifier == "import") return ValueTask.FromResult((TValue)(object)this);
-            if (identifier == "load") return ValueTask.FromResult((TValue)(object?)Json!);
-            if (identifier == "save")
+            if (Directory.Exists(Path))
             {
-                Json = (string)args![0]!;
-                return ValueTask.FromResult(default(TValue)!);
+                Directory.Delete(Path, recursive: true);
             }
-            throw new InvalidOperationException(identifier);
         }
-
-        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 }

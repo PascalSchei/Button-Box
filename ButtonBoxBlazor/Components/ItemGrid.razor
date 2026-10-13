@@ -1,14 +1,4 @@
 <div class="button-grid @DisplayClass @(_outline.Length > 0 ? "has-block-outline" : "")" style="--cols:@Cols; --rows:@Rows;">
-    
-    @foreach (var title in _titles)
-    {
-        <div class="grid-block-title" style="@title.Style">@title.Name</div>
-    }
-    @foreach (var cell in _outline)
-    {
-        <div class="grid-block-frame" style="@cell.Style()" aria-hidden="true"></div>
-    }
-    
     <CascadingValue Value="Display">
         @foreach (var item in Items)
         {
@@ -29,7 +19,14 @@
             }
         }
     </CascadingValue>
-
+    @foreach (var cell in _outline)
+    {
+        <div class="grid-block-frame" style="@cell.Style()" aria-hidden="true"></div>
+    }
+    @foreach (var title in _titles)
+    {
+        <div class="grid-block-title" style="grid-row:@(title.Row + 1); grid-column:@(title.Col + 1) / span @title.Span;" aria-hidden="true">@title.Text</div>
+    }
 </div>
 
 @code {
@@ -49,27 +46,23 @@
     public bool ShowBlockOutline { get; set; } = true;
 
     private GridOutlineCell[] _outline = [];
+
     private BlockTitle[] _titles = [];
 
     protected override void OnParametersSet()
     {
-        var items = Items.ToArray();
-        _outline = ShowBlockOutline ? [.. GridBlockOutline.Build(items)] : [];
-        _titles = ShowBlockOutline
-            ? items.Where(item => item.BlockId is not null)
-                .GroupBy(item => item.BlockId!)
-                .Where(group => BlockCatalog.ById.ContainsKey(group.Key))
-                .Select(group =>
-                {
-                    var first = group.MinBy(item => (item.Row, item.Col))!;
-                    return new BlockTitle(BlockCatalog.ById[group.Key].Name,
-                        $"grid-row:{first.Row + 1};grid-column:{first.Col + 1};");
-                })
-                .ToArray()
-            : [];
+        _outline = ShowBlockOutline ? [.. GridBlockOutline.Build(Items)] : [];
+        _titles = [.. Items.Where(i => i.BlockId is not null).GroupBy(i => i.BlockId!).Select(ToTitle)];
     }
 
-    private sealed record BlockTitle(string Name, string Style);
+    // Anchored at the block's first button, spanning the block width so long names are not cut off.
+    private static BlockTitle ToTitle(IGrouping<string, GridItemDef> block)
+    {
+        var first = block.OrderBy(i => i.Row).ThenBy(i => i.Col).First();
+        return new BlockTitle(BlockCatalog.ById[block.Key].Name, first.Row, first.Col, block.Max(i => i.Col) - first.Col + 1);
+    }
+
+    private sealed record BlockTitle(string Text, int Row, int Col, int Span);
 
     // Lets the stylesheet size icon, text and key to the cell for the chosen combination.
     private string DisplayClass => (Display.ShowIcon, Display.ShowText, Display.ShowKey) switch

@@ -3,5 +3,6 @@ public sealed record ButtonDisplay(bool ShowIcon = true, bool ShowText = true, b
 {
     public static readonly ButtonDisplay Default = new();
 
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool IsValid => ShowIcon || ShowText || ShowKey;
 }

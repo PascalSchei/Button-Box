@@ -4,6 +4,6 @@
 /// </summary>
 public static class Settings
 {
-    /// <summary>Enables the Condor UDP telemetry listener. Disabled for the first deliverable version.</summary>
-    public static readonly bool EnableUdp = true;
+    /// <summary>Enables the Condor UDP telemetry page.</summary>
+    public static readonly bool EnableUdp = false;
 }

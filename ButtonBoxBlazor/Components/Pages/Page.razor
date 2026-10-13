@@ -6,11 +6,7 @@
 
 <PageTitle>@Number</PageTitle>
 
-@if (!Layout.IsLoaded)
-{
-    <p>Loading...</p>
-}
-else if (Layout.Pages.Count == 0)
+@if (Layout.Pages.Count == 0)
 {
     <p>No blocks fit the grid. <a href="settings">Open settings</a></p>
 }
@@ -30,14 +26,6 @@ else
     private int Number => N ?? 1;
 
     protected override void OnInitialized() => Layout.Changed += OnLayoutChanged;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await Layout.EnsureLoadedAsync();
-        }
-    }
 
     private void OnLayoutChanged() => InvokeAsync(StateHasChanged);
 

@@ -1,7 +1,7 @@
 public class GridBlockOutlineTests
 {
     private static GridBlock Block(string id, params (int Row, int Col)[] cells) =>
-        new(id, id, cells.Select(c => new OpacityInfoTileDef(c.Row, c.Col)).ToArray());
+        new(id, id, "white", cells.Select(c => new OpacityInfoTileDef(c.Row, c.Col)).ToArray());
 
     [Fact]
     public void Rectangle_OnlyOuterEdgesAreDrawn()

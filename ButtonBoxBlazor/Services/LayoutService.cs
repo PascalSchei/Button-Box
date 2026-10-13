@@ -1,206 +1,62 @@
-using System.Text.Json;
-using Microsoft.JSInterop;
-
 /// <summary>
-/// Per-device (circuit) layout state: grid size and display options, persisted in the browser's localStorage.
-/// Pages use the server-wide block order and selection and are packed into the grid.
+/// Per-circuit view of the shared layout settings. Pages are the global block order filtered by the selection and packed into the grid.
 /// </summary>
-public sealed class LayoutService : IAsyncDisposable
+public sealed class LayoutService : IDisposable
 {
-    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
-
     private readonly BlockOrderStore _orderStore;
-    private readonly IJSRuntime _js;
-    private IJSObjectReference? _module;
-    private Task? _loadTask;
+    private readonly LayoutSettingsStore _settingsStore;
+    private LayoutSettings _settings;
 
-    public LayoutService(BlockOrderStore orderStore, IJSRuntime js)
+    public LayoutService(BlockOrderStore orderStore, LayoutSettingsStore settingsStore)
     {
         _orderStore = orderStore;
-        _js = js;
-        Cols = GridPreset.Tablet.Cols;
-        Rows = GridPreset.Tablet.Rows;
-        Pages = LayoutPacker.Pack([], Cols, Rows);
-        Recompute();
-        _orderStore.Changed += OnOrderChanged;
+        _settingsStore = settingsStore;
+        _settings = settingsStore.Settings;
+        Pages = Pack();
+        _orderStore.Changed += OnSharedChanged;
+        _settingsStore.Changed += OnSharedChanged;
     }
 
     /// <summary>Raised when the layout changed; may run on a non-render thread.</summary>
     public event Action? Changed;
 
-    /// <summary>False until the device settings were read from the browser (prerendering has no JS).</summary>
-    public bool IsLoaded { get; private set; }
+    public int Cols => _settings.Cols;
 
-    public int Cols { get; private set; }
+    public int Rows => _settings.Rows;
 
-    public int Rows { get; private set; }
+    public ButtonDisplay Display => _settings.Display;
 
-    public ButtonDisplay Display { get; private set; } = ButtonDisplay.Default;
-
-    public bool ShowBlockOutline { get; private set; } = true;
+    public bool ShowBlockOutline => _settings.ShowBlockOutline;
 
     public IReadOnlyList<LayoutPage> Pages { get; private set; }
 
-    public Task EnsureLoadedAsync() => _loadTask ??= LoadAsync();
+    public bool IsSelected(string blockId) => _settings.Blocks.Contains(blockId);
 
-    public async Task SetGridAsync(int cols, int rows)
+    public void SetGrid(int cols, int rows) => _settingsStore.SetGrid(cols, rows);
+
+    public void SetBlockSelected(string blockId, bool selected) => _settingsStore.SetBlockSelected(blockId, selected);
+
+    public void SetDisplay(ButtonDisplay display) => _settingsStore.SetDisplay(display);
+
+    public void SetBlockOutline(bool show) => _settingsStore.SetBlockOutline(show);
+
+    public void Dispose()
     {
-        Cols = GridPreset.ClampCols(cols);
-        Rows = GridPreset.ClampRows(rows);
-        await ChangeAsync();
+        _orderStore.Changed -= OnSharedChanged;
+        _settingsStore.Changed -= OnSharedChanged;
     }
 
-    public async Task SetDisplayAsync(ButtonDisplay display)
+    private IReadOnlyList<LayoutPage> Pack()
     {
-        if (!display.IsValid)
-        {
-            return;
-        }
-
-        Display = display;
-        await ChangeAsync();
+        var settings = _settings;
+        return LayoutPacker.Pack(
+            _orderStore.Order.Where(settings.Blocks.Contains).Select(id => BlockCatalog.ById[id]), settings.Cols, settings.Rows);
     }
 
-    public async Task SetBlockOutlineAsync(bool show)
+    private void OnSharedChanged()
     {
-        ShowBlockOutline = show;
-        await ChangeAsync();
-    }
-
-    public async Task<(int Width, int Height)?> GetViewportAsync()
-    {
-        if (_module is null)
-        {
-            return null;
-        }
-
-        try
-        {
-            var viewport = await _module.InvokeAsync<ViewportData>("getViewport");
-            return (viewport.Width, viewport.Height);
-        }
-        catch (JSDisconnectedException)
-        {
-            return null;
-        }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        _orderStore.Changed -= OnOrderChanged;
-        if (_module is null)
-        {
-            return;
-        }
-
-        try
-        {
-            await _module.DisposeAsync();
-        }
-        catch (JSDisconnectedException)
-        {
-            // The circuit is already closed.
-        }
-    }
-
-    private async Task LoadAsync()
-    {
-        try
-        {
-            _module = await _js.InvokeAsync<IJSObjectReference>("import", "./js/deviceStorage.js");
-            Apply(await _module.InvokeAsync<string?>("load"));
-        }
-        catch (JSDisconnectedException)
-        {
-            _loadTask = null;
-            return;
-        }
-        catch (JSException)
-        {
-            // Storage unavailable: keep the defaults.
-        }
-
-        IsLoaded = true;
-        Recompute();
+        _settings = _settingsStore.Settings;
+        Pages = Pack();
         Changed?.Invoke();
     }
-
-    // Anything unreadable or inconsistent falls back to the defaults.
-    private void Apply(string? json)
-    {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return;
-        }
-
-        DeviceData? data;
-        try
-        {
-            data = JsonSerializer.Deserialize<DeviceData>(json, Json);
-        }
-        catch (JsonException)
-        {
-            return;
-        }
-
-        if (data is null)
-        {
-            return;
-        }
-
-        ShowBlockOutline = data.ShowBlockOutline ?? true;
-
-        if (data.Cols > 0 && data.Rows > 0)
-        {
-            Cols = GridPreset.ClampCols(data.Cols);
-            Rows = GridPreset.ClampRows(data.Rows);
-        }
-
-        if (data.Show is { } show && new ButtonDisplay(show.Icon, show.Text, show.Key) is { IsValid: true } display)
-        {
-            Display = display;
-        }
-    }
-
-    private async Task ChangeAsync()
-    {
-        Recompute();
-        Changed?.Invoke();
-        await SaveAsync();
-    }
-
-    private async Task SaveAsync()
-    {
-        if (_module is null)
-        {
-            return;
-        }
-
-        var data = new DeviceData(Cols, Rows, new DisplayData(Display.ShowIcon, Display.ShowText, Display.ShowKey), ShowBlockOutline);
-        try
-        {
-            await _module.InvokeVoidAsync("save", JsonSerializer.Serialize(data, Json));
-        }
-        catch (JSDisconnectedException)
-        {
-            // The circuit is already closed.
-        }
-    }
-
-    private void Recompute()
-    {
-        Pages = LayoutPacker.Pack(_orderStore.Order.Where(_orderStore.IsSelected).Select(id => BlockCatalog.ById[id]), Cols, Rows);
-    }
-
-    private void OnOrderChanged()
-    {
-        Recompute();
-        Changed?.Invoke();
-    }
-
-    private sealed record DeviceData(int Cols, int Rows, DisplayData? Show, bool? ShowBlockOutline = null);
-
-    private sealed record DisplayData(bool Icon, bool Text, bool Key);
-
-    private sealed record ViewportData(int Width, int Height);
 }

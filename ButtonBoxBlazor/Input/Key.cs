@@ -170,8 +170,40 @@ public readonly record struct Key(ushort ScanCode, bool Extended = false, [Calle
 
     private static readonly Dictionary<string, Key> ByName = BuildLookup();
 
+    // The first declared name wins when several keys share a scan code (e.g. Control and LeftCtrl).
+    private static readonly Dictionary<(ushort, bool), Key> ByScanCode =
+        ByName.Values.GroupBy(k => (k.ScanCode, k.Extended)).ToDictionary(g => g.Key, g => g.First());
+
+    private const string RawPrefix = "Scan";
+
     // Replaces Enum.TryParse: looks a key up by its Name (used by the button-tag parser).
-    public static bool TryParse(string name, out Key key) => ByName.TryGetValue(name, out key);
+    // "Scan<n>" addresses a key without a declared name by its controls.ini value.
+    public static bool TryParse(string name, out Key key)
+    {
+        if (ByName.TryGetValue(name, out key))
+        {
+            return true;
+        }
+
+        if (name.StartsWith(RawPrefix, StringComparison.Ordinal) && int.TryParse(name.AsSpan(RawPrefix.Length), out var raw) && raw is > 0 and <= 255)
+        {
+            key = FromDirectInput(raw);
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Converts a DirectInput keyboard value (as stored in controls.ini: scan code, +128 for extended keys) to a key.
+    /// Keys without a declared name get the name "Scan&lt;value&gt;", which <see cref="TryParse"/> understands.
+    /// </summary>
+    public static Key FromDirectInput(int value)
+    {
+        var scanCode = (ushort)(value & 0x7F);
+        var extended = value >= 0x80;
+        return ByScanCode.TryGetValue((scanCode, extended), out var known) ? known : new Key(scanCode, extended, RawPrefix + value);
+    }
 
     private static Dictionary<string, Key> BuildLookup()
     {

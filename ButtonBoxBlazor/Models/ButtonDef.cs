@@ -15,11 +15,13 @@ public enum ButtonMode
 /// </summary>
 /// <param name="Tag">Key name (or '+'-joined combo) understood by <see cref="Key.TryParse"/>.</param>
 /// <param name="KeyCaption">Text shown on the key cap when the device shows the key option.</param>
+/// <param name="Function">Condor function number used in controls.ini; when bound there to a keyboard key, that key replaces <paramref name="Tag"/>.</param>
 public sealed record ButtonDef(int Row,
                                int Col,
                                string Tag,
                                string Label,
                                string KeyCaption,
                                string? Icon = null,
-                               string? Color = "white",
-                               ButtonMode Mode = ButtonMode.Hold) : GridItemDef(Row, Col, Color);
+                               string? Color = null,
+                               ButtonMode Mode = ButtonMode.Hold,
+                               int? Function = null) : GridItemDef(Row, Col, Color);

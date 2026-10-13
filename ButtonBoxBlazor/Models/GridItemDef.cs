@@ -1,7 +1,7 @@
 /// <summary>
 /// Common base of everything placed in an <c>ItemGrid</c>: grid position and tint color.
 /// </summary>
-/// <param name="Color">Any CSS color; tints the item like an LED.</param>
+/// <param name="Color">Any CSS color; tints the item like an LED. Null uses the default color of the owning block.</param>
 public record GridItemDef(int Row, int Col, string? Color)
 {
     /// <summary>Owning block, retained when the item is placed on a layout page.</summary>

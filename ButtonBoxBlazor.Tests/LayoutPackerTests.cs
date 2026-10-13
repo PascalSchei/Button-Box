@@ -1,7 +1,7 @@
 public class LayoutPackerTests
 {
     private static GridBlock Block(string id, int width, int height) =>
-        new(id, id, new OpacityInfoTileDef(0, 0), new OpacityInfoTileDef(height - 1, width - 1));
+        new(id, id, "white", new OpacityInfoTileDef(0, 0), new OpacityInfoTileDef(height - 1, width - 1));
 
     private static IEnumerable<(int Row, int Col)> Cells(LayoutPage page) => page.Items.Select(i => (i.Row, i.Col));
 

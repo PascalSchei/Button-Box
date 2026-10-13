@@ -3,16 +3,12 @@
 @implements IDisposable
 @inject LayoutService Layout
 @inject BlockOrderStore OrderStore
+@inject ControlsStore Controls
 
 <PageTitle>Settings</PageTitle>
 
 <div class="settings-page">
-    @if (!Layout.IsLoaded)
-    {
-        <p>Loading...</p>
-    }
-    else
-    {
+    @{
         var display = Layout.Display;
         var order = OrderStore.Order;
 
@@ -31,57 +27,76 @@
             <div class="settings-row">
                 <label for="cols">Columns (@GridPreset.MinCols-@GridPreset.MaxCols)</label>
                 <input id="cols" type="number" class="form-control" min="@GridPreset.MinCols" max="@GridPreset.MaxCols" value="@Layout.Cols"
-                       @onchange="e => SetGridAsync(e.Value, Layout.Rows)" />
+                       @onchange="e => SetGrid(e.Value, Layout.Rows)" />
             </div>
             <div class="settings-row">
                 <label for="rows">Rows (@GridPreset.MinRows-@GridPreset.MaxRows)</label>
                 <input id="rows" type="number" class="form-control" min="@GridPreset.MinRows" max="@GridPreset.MaxRows" value="@Layout.Rows"
-                       @onchange="e => SetGridAsync(Layout.Cols, e.Value)" />
+                       @onchange="e => SetGrid(Layout.Cols, e.Value)" />
             </div>
             <p>Pages: @Layout.Pages.Count</p>
-
-            <button type="button" class="btn btn-secondary" @onclick="MeasureAsync">Measure device</button>
-            @if (_suggestion is { } suggestion)
-            {
-                <p class="mt-2">
-                    Suggestion: @suggestion.Cols x @suggestion.Rows (viewport @_viewportWidth x @_viewportHeight px, @MinCell px per cell)
-                </p>
-                <button type="button" class="btn btn-primary" @onclick="ApplySuggestionAsync">Apply</button>
-                <button type="button" class="btn btn-secondary" @onclick="() => _suggestion = null">Discard</button>
-            }
         </section>
 
         <section>
             <h2>Button display</h2>
             <label class="settings-check">
                 <input type="checkbox" checked="@display.ShowIcon" disabled="@(display is { ShowIcon: true, ShowText: false, ShowKey: false })"
-                       @onchange="e => SetDisplayAsync(display with { ShowIcon = (bool)e.Value! })" /> Icon
+                       @onchange="e => SetDisplay(display with { ShowIcon = (bool)e.Value! })" /> Icon
             </label>
             <label class="settings-check">
                 <input type="checkbox" checked="@display.ShowText" disabled="@(display is { ShowIcon: false, ShowText: true, ShowKey: false })"
-                       @onchange="e => SetDisplayAsync(display with { ShowText = (bool)e.Value! })" /> Text
+                       @onchange="e => SetDisplay(display with { ShowText = (bool)e.Value! })" /> Text
             </label>
             <label class="settings-check">
                 <input type="checkbox" checked="@display.ShowKey" disabled="@(display is { ShowIcon: false, ShowText: false, ShowKey: true })"
-                       @onchange="e => SetDisplayAsync(display with { ShowKey = (bool)e.Value! })" /> Key
+                       @onchange="e => SetDisplay(display with { ShowKey = (bool)e.Value! })" /> Key
             </label>
+        </section>
+
+        <section>
+            <h2>Condor controls</h2>
+            <div class="settings-row">
+                <label for="controls-path">Path to controls.ini</label>
+                <input id="controls-path" type="text" class="form-control" readonly value="@Controls.IniPath" placeholder="Not set: default keys" />
+            </div>
+            <button type="button" class="btn btn-primary" disabled="@_browsing" @onclick="BrowseControlsAsync">Browse...</button>
+            <button type="button" class="btn btn-secondary" @onclick="SearchControls">Search</button>
+            <button type="button" class="btn btn-secondary" disabled="@(Controls.IniPath is null)" @onclick="Controls.Reload">Reload</button>
+            <button type="button" class="btn btn-secondary" disabled="@(Controls.IniPath is null)" @onclick="ClearControlsPath">Use default keys</button>
+            @if (Controls.Status is { } status)
+            {
+                <p class="mt-2">@status</p>
+            }
+            @if (_controlsCandidates is { } candidates)
+            {
+                if (candidates.Count == 0)
+                {
+                    <p class="mt-2">No controls.ini found in Documents\Condor3\Pilots.</p>
+                }
+                foreach (var candidate in candidates)
+                {
+                    <div>
+                        <button type="button" class="btn btn-secondary mt-1" @onclick="() => UseControlsCandidate(candidate)">@candidate</button>
+                    </div>
+                }
+            }
+            <p>Buttons use the keyboard keys bound in controls.ini; other buttons keep their default key. Applies to all devices.</p>
         </section>
 
         <section>
             <h2>Blocks</h2>
             <label class="settings-check">
                 <input type="checkbox" checked="@Layout.ShowBlockOutline"
-                       @onchange="e => Layout.SetBlockOutlineAsync((bool)e.Value!)" /> Show block outline
+                       @onchange="e => Layout.SetBlockOutline((bool)e.Value!)" /> Show block outline
             </label>
-            <p>Block selection and order apply to all devices.</p>
             @for (var i = 0; i < order.Count; i++)
             {
                 var block = BlockCatalog.ById[order[i]];
                 var index = i;
                 <div class="settings-block">
                     <label class="settings-check">
-                        <input type="checkbox" checked="@OrderStore.IsSelected(block.Id)"
-                               @onchange="e => OrderStore.SetSelected(block.Id, (bool)e.Value!)" />
+                        <input type="checkbox" checked="@Layout.IsSelected(block.Id)"
+                               @onchange="e => Layout.SetBlockSelected(block.Id, (bool)e.Value!)" />
                         @block.Name (@block.Width x @block.Height)
                         @if (block.Width > Layout.Cols || block.Height > Layout.Rows)
                         {
@@ -101,55 +116,61 @@
 </div>
 
 @code {
-    private const int MinCell = 70;
     private const string CustomPreset = "custom";
-
-    private (int Cols, int Rows)? _suggestion;
-    private int _viewportWidth;
-    private int _viewportHeight;
 
     private string CurrentPreset =>
         GridPreset.All.FirstOrDefault(p => p.Cols == Layout.Cols && p.Rows == Layout.Rows)?.Name ?? CustomPreset;
 
+    private bool _browsing;
+    private IReadOnlyList<string>? _controlsCandidates;
+
     protected override void OnInitialized() => Layout.Changed += OnLayoutChanged;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    // The dialog opens on the machine running the server.
+    private async Task BrowseControlsAsync()
     {
-        if (firstRender)
+        _browsing = true;
+        try
         {
-            await Layout.EnsureLoadedAsync();
+            if (await IniFileDialog.PickAsync(Controls.SuggestedFolder()) is { } path)
+            {
+                _controlsCandidates = null;
+                Controls.SetPath(path);
+            }
+        }
+        finally
+        {
+            _browsing = false;
         }
     }
 
-    private Task OnPresetChanged(ChangeEventArgs e) =>
-        GridPreset.All.FirstOrDefault(p => p.Name == e.Value as string) is { } preset
-            ? Layout.SetGridAsync(preset.Cols, preset.Rows)
-            : Task.CompletedTask;
+    private void ClearControlsPath() => Controls.SetPath(null);
 
-    private Task SetGridAsync(object? cols, object? rows) =>
-        int.TryParse(cols?.ToString(), out var c) && int.TryParse(rows?.ToString(), out var r)
-            ? Layout.SetGridAsync(c, r)
-            : Task.CompletedTask;
+    private void SearchControls() => _controlsCandidates = Controls.FindCandidates();
 
-    private Task SetDisplayAsync(ButtonDisplay display) => Layout.SetDisplayAsync(display);
-
-    private async Task MeasureAsync()
+    private void UseControlsCandidate(string path)
     {
-        if (await Layout.GetViewportAsync() is { } viewport)
+        _controlsCandidates = null;
+        Controls.SetPath(path);
+    }
+
+    private void OnPresetChanged(ChangeEventArgs e)
+    {
+        if (GridPreset.All.FirstOrDefault(p => p.Name == e.Value as string) is { } preset)
         {
-            (_viewportWidth, _viewportHeight) = viewport;
-            _suggestion = GridPreset.Suggest(viewport.Width, viewport.Height, MinCell);
+            Layout.SetGrid(preset.Cols, preset.Rows);
         }
     }
 
-    private async Task ApplySuggestionAsync()
+    private void SetGrid(object? cols, object? rows)
     {
-        if (_suggestion is { } suggestion)
+        if (int.TryParse(cols?.ToString(), out var c) && int.TryParse(rows?.ToString(), out var r))
         {
-            _suggestion = null;
-            await Layout.SetGridAsync(suggestion.Cols, suggestion.Rows);
+            Layout.SetGrid(c, r);
         }
     }
+
+    private void SetDisplay(ButtonDisplay display) => Layout.SetDisplay(display);
 
     private void OnLayoutChanged() => InvokeAsync(StateHasChanged);
 

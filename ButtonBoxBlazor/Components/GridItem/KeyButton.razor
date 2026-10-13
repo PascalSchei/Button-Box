@@ -1,5 +1,6 @@
 @implements IDisposable
 @inject IKeyboardService Keyboard
+@inject ControlsStore Controls
 
 <button class="grid-btn grid-item" style="@Definition.Style"
         @onpointerdown="OnDown" @onpointerup="OnUp"
@@ -14,7 +15,7 @@
     }
     @if (Display.ShowKey)
     {
-        <span class="btn-key">@Definition.KeyCaption</span>
+        <span class="btn-key">@Controls.Resolve(Definition).Caption</span>
     }
 </button>
 
@@ -32,28 +33,40 @@
     // Falls back to the text when nothing else would be visible (e.g. icon-only without an icon).
     private bool ShowText => Display.ShowText || (!ShowIcon && !Display.ShowKey);
 
+    // Remembered from the press so the release matches even if controls.ini is reloaded while held.
+    private string? pressedTag;
+
     private void OnDown()
     {
+        pressedTag ??= Controls.Resolve(Definition).Tag;
+
         if (Definition.Mode == ButtonMode.Repeat)
         {
-            holdRepeater.Start(Definition.Tag, Keyboard.SendTag);
+            holdRepeater.Start(pressedTag, Keyboard.SendTag);
         }
         else
         {
-            Keyboard.SendTagDown(Definition.Tag);
+            Keyboard.SendTagDown(pressedTag);
         }
     }
 
     private void OnUp()
     {
+        if (pressedTag is null)
+        {
+            return;
+        }
+
         if (Definition.Mode == ButtonMode.Repeat)
         {
-            holdRepeater.Stop(Definition.Tag);
+            holdRepeater.Stop(pressedTag);
         }
         else
         {
-            Keyboard.SendTagUp(Definition.Tag);
+            Keyboard.SendTagUp(pressedTag);
         }
+
+        pressedTag = null;
     }
 
     public void Dispose() => holdRepeater.Dispose();

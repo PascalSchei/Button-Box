@@ -23,11 +23,6 @@ public sealed class CondorUdpService(ILogger<CondorUdpService> logger) : Backgro
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (!Settings.EnableUdp)
-        {
-            logger.LogInformation("UDP-Empfang ist per Settings.EnableUdp deaktiviert.");
-            return;
-        }
 
         UdpClient client;
         try

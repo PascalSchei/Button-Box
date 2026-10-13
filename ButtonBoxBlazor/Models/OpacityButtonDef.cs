@@ -6,4 +6,4 @@ public sealed record OpacityButtonDef(int Row,
                                        string Label,
                                        string Icon,
                                        int Delta,
-                                       string? Color = "violet") : GridItemDef(Row, Col, Color);
+                                       string? Color = null) : GridItemDef(Row, Col, Color);

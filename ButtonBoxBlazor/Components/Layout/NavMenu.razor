@@ -18,16 +18,13 @@
 
     <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
         <nav class="nav flex-column">
-            @if (Layout.IsLoaded)
+            @foreach (var number in Enumerable.Range(1, Layout.Pages.Count))
             {
-                foreach (var number in Enumerable.Range(1, Layout.Pages.Count))
-                {
-                    <div class="nav-item px-3">
-                        <NavLink class="nav-link" href="@(number == 1 ? "" : $"page/{number}")" Match="NavLinkMatch.All" title="@number">
-                            <span class="bi @(number == 1 ? "bi-house-door-fill-nav-menu" : "bi-list-nested-nav-menu")" aria-hidden="true"></span> <span class="nav-link-text">@number</span>
-                        </NavLink>
-                    </div>
-                }
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="@(number == 1 ? "" : $"page/{number}")" Match="NavLinkMatch.All" title="@($"Page {number}")">
+                        <span class="page-icon" aria-hidden="true">@number</span> <span class="nav-link-text">Page @number</span>
+                    </NavLink>
+                </div>
             }
 
             <div class="nav-item px-3">
@@ -70,8 +67,6 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-
-        await Layout.EnsureLoadedAsync();
 
         try
         {

@@ -5,4 +5,4 @@ public sealed record InfoTileDef(int Row,
                                  int Col,
                                  string Label,
                                  Func<CondorTelemetry, string> Format,
-                                 string? Color = "white") : GridItemDef(Row, Col, Color);
+                                 string? Color = null) : GridItemDef(Row, Col, Color);

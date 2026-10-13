@@ -10,8 +10,27 @@
 
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background-color: black;
     color: white;
+}
+
+body {
+    background-color: transparent;
+}
+
+html {
+    background-color: rgb(20, 20, 20);
+    background-image:
+        radial-gradient(ellipse 120% 90% at 25% 0%, rgba(0, 68, 255, 0.137), transparent 50%),
+        radial-gradient(ellipse 100% 100% at 50% 50%, transparent 55%, rgb(0, 0, 0)),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='f' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' seed='4' stitchTiles='stitch' result='n'/><feDiffuseLighting in='n' lighting-color='white' surfaceScale='1.8'><feDistantLight azimuth='225' elevation='50'/></feDiffuseLighting><feComponentTransfer><feFuncR type='linear' slope='3' intercept='-1.4'/><feFuncG type='linear' slope='3' intercept='-1.4'/><feFuncB type='linear' slope='3' intercept='-1.4'/></feComponentTransfer></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+    background-size: auto, auto, 300px 300px;
+    background-blend-mode: normal, normal, multiply;
+    background-attachment: fixed;
+}
+
+html:has(.settings-page) {
+    background-color: #000;
+    background-image: none;
 }
 
 /* Tablet/Desktop: Basisschrift (rem/em) skaliert mit der Breite; 1280px => 12.8px, ab 1600px => 16px. */
@@ -50,7 +69,7 @@ html, body {
 }
 
 .button-grid.has-block-outline {
-    --grid-block-outline-width: 6px;
+    --grid-block-outline-width: 3px;
     --grid-block-outline-radius: 0px;
     /* Reserve space for the frame at the grid perimeter, too. */
     padding: calc((var(--gap) + var(--grid-block-outline-width)) / 2);
@@ -63,9 +82,9 @@ html, body {
     min-height: 0;
     margin: calc((var(--gap) + var(--grid-block-outline-width)) / -2);
     border-style: solid;
-    border-color: gray;
+    border-color: rgb(245 245 245 / 1.0);
     pointer-events: none;
-    z-index: 0;
+    z-index: 1;
 }
 
 .button-grid.only-text {
@@ -74,6 +93,27 @@ html, body {
 
 .button-grid.only-key {
     --key-size: 16cqmin;
+}
+
+/* Sits in the gap below the block's first button: centered on the row gap, bottom edge at the cell's bottom edge before the shift. */
+.grid-block-title {
+    align-self: end;
+    justify-self: start;
+    max-width: 100%;
+    padding-left: 0.2rem;
+    box-sizing: border-box;
+    transform: translateY(calc(var(--gap) / 2 + 50%));
+    font-size: calc(var(--gap) + 0.25rem);
+    font-weight: bold;
+    line-height: 1;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+    z-index: 2;
 }
 
 .button-grid.show-all {
@@ -85,15 +125,12 @@ html, body {
 
 .grid-btn {
     background-color: color-mix(in srgb, var(--btn-color, black) 8%, black);
-    border: 0.3em solid currentColor;    
+    border: 0.3em solid currentColor;
     color: var(--btn-color, white);
     touch-action: manipulation;
 }
 
 .grid-item {
-    
-    position: relative;
-    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -101,11 +138,11 @@ html, body {
     gap: var(--space-sm);
     font-size: 1em;
     font-weight: bold;
-    border-radius: 2em;
-    margin: 0.4em;
+    border-radius: 1em;
     text-align: center;
     touch-action: manipulation;
     container-type: size;
+    margin:0.3rem;
 }
 
 .btn-icon {
@@ -376,23 +413,3 @@ h1:focus {
 .condor-table td:first-child {
     font-weight: bold;
 }
-
-.grid-block-title {
-    align-self: end;
-    justify-self: center;
-    z-index: 2;
-    transform: translateY(calc(70% - var(--gap) / 2));
-    max-width: 100%;
-    padding: 0.1em 0.4em;
-    border-radius: var(--radius-sm);
-    background: gray;
-    color: black;
-    font-size: clamp(0.55rem, 1.2vw, 0.8rem);
-    line-height: 1.2;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    pointer-events: none;
-    
-}
-
