@@ -15,8 +15,7 @@ A touch-friendly control panel for [Condor Soaring](https://www.condorsoaring.co
 
 ## Features
 
-- **Keyboard buttons** — 
-    Every Condor default key binding (airbrakes, flaps, radio, gear, ...) as a large, touch-friendly button. Press-and-hold buttons repeat while you keep your finger down.
+- **Keyboard buttons** — Every Condor default key binding (airbrakes, flaps, radio, gear, ...) as a large, touch-friendly button. Press-and-hold buttons repeat while you keep your finger down.
 - **Live Condor data via UDP** — Time, height, flaps, MacCready and water ballast are shown as info tiles, fed directly by Condor's UDP output. No more looking for small cockpit gauges. See [Setting up UDP.ini](#setting-up-udpini).
 - **LX instrument controls, including Opacity** — Operate the LX navigation device from your tablet and adjust the opacity of the LX display on the flight PC with dedicated buttons.
 - **Your own Condor key bindings** — The app reads your Condor `controls.ini` and uses the keyboard keys you assigned there, so the buttons keep working when you changed Condor's default keys. See [Using your controls.ini](#using-your-controlsini).
@@ -28,7 +27,6 @@ A touch-friendly control panel for [Condor Soaring](https://www.condorsoaring.co
 
 ## Requirements
 
-- The flight PC runs **Windows 10 or 11**. It sends key presses using a Windows-only API, so it will **not** run on Linux or macOS.
 - Both devices (flight PC and your tablet/phone/notebook) must be connected to the **same local network** (same Wi-Fi/router). The app does not work over the internet and does not need internet access.
 - Any reasonably modern web browser on the second device (Chrome, Edge, Safari, Firefox, etc.).
 
@@ -47,7 +45,7 @@ A console window stays open while the app runs; keep it running in the backgroun
 The console window prints the address to open, for example:
 
 ```
-Erreichbar unter: http://192.168.1.42:54738
+Available at: http://192.168.1.42:54738
 ```
 
 Enter exactly that address in the browser of your tablet/phone/notebook. You should see the button grid. Add it to your home screen / bookmarks for quick access next time.

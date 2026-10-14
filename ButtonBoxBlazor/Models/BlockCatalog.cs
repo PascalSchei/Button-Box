@@ -1,4 +1,3 @@
-using System.Drawing;
 using System.Globalization;
 
 /// <summary>
@@ -181,7 +180,7 @@ public static class BlockCatalog {
     Altimeter,
     CamSelect,
     Motor,
-    CamView,    
+    CamView,
     TrimmerFlaps,
     AirBrakes,
     Radio
