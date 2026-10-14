@@ -121,7 +121,7 @@ If the button is already assigned on your joystick, you shouldn’t need to have
 ### Know your needs
 <img src="res/image09.jpg" width="600" >
 
-### Setup your and style
+### Setup your style and controls
 <img src="res/image05.jpg" width="600" >
 
 ### Select and organize your blocks
