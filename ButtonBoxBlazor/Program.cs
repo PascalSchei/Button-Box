@@ -47,7 +47,7 @@ app.Lifetime.ApplicationStarted.Register(() =>
 
     foreach (var port in ports)
         foreach (var ip in ips)
-            Console.WriteLine($"Erreichbar unter: http://{ip}:{port}");
+            Console.WriteLine($"Available at: http://{ip}:{port}");
 });
 
 app.Run();

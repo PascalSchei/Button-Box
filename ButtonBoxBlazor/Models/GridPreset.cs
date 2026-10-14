@@ -6,14 +6,13 @@ public sealed record GridPreset(string Name, int Cols, int Rows)
     public const int MinRows = 3;
     public const int MaxRows = 14;
 
-    public static readonly GridPreset Tablet = new("Tablet", 10, 7);
+    public static readonly GridPreset Tablet = new("Tablet", 9, 6);
 
     public static readonly IReadOnlyList<GridPreset> All =
     [
         Tablet,
-        new("Phone", 10, 5),
-        new("Compact", 8, 4),
-        new("Large", 14, 8)
+        new("Phone", 7, 3),
+        new("Large", 13, 9)
     ];
 
     public static int ClampCols(int cols) => Math.Clamp(cols, MinCols, MaxCols);
