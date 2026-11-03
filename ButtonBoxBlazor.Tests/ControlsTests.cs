@@ -99,6 +99,36 @@ public class ControlsTests
         Assert.Equal([Path.Combine(pilot, "controls.ini")], found);
     }
 
+    [Fact]
+    public void Reset_RemovesSavedPathAndBindingsButPreservesControlsIni()
+    {
+        using var directory = new TempDirectory();
+        var store = CreateStore(directory);
+        var path = Path.Combine(directory.Path, "controls.ini");
+        var content = Ini.Replace("3016=19", "3016=20");
+        File.WriteAllText(path, content);
+        store.SetPath(path);
+        var button = new ButtonDef(0, 0, "R", "Release", "R", Function: 3016);
+        Assert.Equal(new ResolvedKey("T", "T"), store.Resolve(button));
+        var changes = 0;
+        store.Changed += () => changes++;
+
+        store.Reset();
+
+        Assert.Equal(1, changes);
+        Assert.Null(store.IniPath);
+        Assert.Null(store.Status);
+        Assert.Equal(0, store.BoundCount);
+        Assert.Equal(new ResolvedKey("R", "R"), store.Resolve(button));
+        Assert.Equal(content, File.ReadAllText(path));
+        Assert.False(File.Exists(Path.Combine(directory.Path, "controls-settings.json")));
+        var reloaded = CreateStore(directory);
+        Assert.Null(reloaded.IniPath);
+        Assert.Equal(new ResolvedKey("R", "R"), reloaded.Resolve(button));
+        store.Reset();
+        Assert.Equal(content, File.ReadAllText(path));
+    }
+
     private static ControlsStore CreateStore(TempDirectory directory) =>
         new(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?> { ["ButtonBox:DataPath"] = directory.Path }).Build(),
             NullLogger<ControlsStore>.Instance);

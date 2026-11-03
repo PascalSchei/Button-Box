@@ -49,6 +49,15 @@ public class GridBlockOutlineTests
         Assert.Empty(GridBlockOutline.Build([new OpacityInfoTileDef(0, 0)]));
 
     [Fact]
+    public void SpanningItem_CountsTowardBlockSizeAndOutline()
+    {
+        var block = new GridBlock("hud-messages", "HUD messages", "white", new HudMessagesDef(0, 0) { RowSpan = 3, ColSpan = 3 });
+
+        Assert.Equal((3, 3), (block.Width, block.Height));
+        Assert.Equal(8, GridBlockOutline.Build(block.Placed(0, 0)).Count());
+    }
+
+    [Fact]
     public void PackedPages_RetainBlockIdentityAfterShiftAndPageBreak()
     {
         var pages = LayoutPacker.Pack([

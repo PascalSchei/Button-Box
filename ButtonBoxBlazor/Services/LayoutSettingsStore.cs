@@ -67,6 +67,26 @@ public sealed class LayoutSettingsStore
     public void SetBlockOutline(bool show) =>
         Update(s => s.ShowBlockOutline == show ? null : s with { ShowBlockOutline = show });
 
+    public void Reset()
+    {
+        lock (_lock)
+        {
+            try
+            {
+                File.Delete(_filePath);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                _logger.LogError(ex, "Layout settings '{Path}' could not be reset.", _filePath);
+                throw;
+            }
+
+            _settings = Normalize(null);
+        }
+
+        Changed?.Invoke();
+    }
+
     // A null result means nothing changed.
     private void Update(Func<LayoutSettings, LayoutSettings?> change)
     {
@@ -90,7 +110,7 @@ public sealed class LayoutSettingsStore
         stored is { Rows: > 0 } ? GridPreset.ClampRows(stored.Rows) : GridPreset.Tablet.Rows,
         stored?.Display is { IsValid: true } display ? display : ButtonDisplay.Default,
         stored?.ShowBlockOutline ?? true,
-        stored?.Blocks is { } blocks ? [.. blocks.Where(BlockCatalog.ById.ContainsKey).Distinct()] : [.. BlockCatalog.All.Select(b => b.Id)]);
+        stored?.Blocks is { } blocks ? [.. blocks.Where(BlockCatalog.ById.ContainsKey).Distinct()] : [.. BlockCatalog.All.Where(b => !b.HiddenByDefault).Select(b => b.Id)]);
 
     private LayoutSettings? Load()
     {

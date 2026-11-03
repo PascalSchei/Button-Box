@@ -9,10 +9,16 @@ public sealed class GridBlock(string id, string name, string defaultColor, param
     public string Id { get; } = id;
     public string Name { get; } = name;
     public string DefaultColor { get; } = defaultColor;
+
+    /// <summary>False for blocks whose content already names them; the grid then draws no title.</summary>
+    public bool ShowTitle { get; init; } = true;
+
+    /// <summary>True for blocks that are not selected until the user enables them.</summary>
+    public bool HiddenByDefault { get; init; }
     public GridItemDef[] Items { get; } = items;
 
-    public int Width { get; } = items.Max(i => i.Col) + 1;
-    public int Height { get; } = items.Max(i => i.Row) + 1;
+    public int Width { get; } = items.Max(i => i.Col + i.ColSpan);
+    public int Height { get; } = items.Max(i => i.Row + i.RowSpan);
 
     /// <summary>Items with their positions translated to absolute grid coordinates.</summary>
     public IEnumerable<GridItemDef> Placed(int row, int col) => Items.Select(i => i with { Row = row + i.Row, Col = col + i.Col, Color = i.Color ?? DefaultColor, BlockId = Id });

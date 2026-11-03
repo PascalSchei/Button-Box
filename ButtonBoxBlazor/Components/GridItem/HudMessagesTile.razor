@@ -1,0 +1,50 @@
+@using Microsoft.JSInterop
+@inherits TelemetryComponentBase
+@inject IJSRuntime JS
+
+@{
+    _lines = Telemetry.HudMessages.Entries;
+    _version = Telemetry.HudMessages.Version;
+}
+
+<div class="info-tile grid-item hud-messages" style="@TileStyle">
+    <div class="hud-messages-title">HUD messages</div>
+    <div class="hud-messages-scroll" @ref="_log">
+        @foreach (var line in _lines)
+        {
+            <span class="hud-message-line">@line</span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public HudMessagesDef Definition { get; set; } = null!;
+
+    private ElementReference _log;
+    private IJSObjectReference? _module;
+    private IReadOnlyList<string> _lines = [];
+    private int _version;
+    private int _scrolledVersion = -1;
+
+    private string TileStyle => Definition.Style;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_version == _scrolledVersion)
+        {
+            return;
+        }
+
+        _scrolledVersion = _version;
+        try
+        {
+            _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/hudMessages.js");
+            await _module.InvokeVoidAsync("scrollToBottom", _log);
+        }
+        catch (Exception ex) when (ex is JSException or JSDisconnectedException or InvalidOperationException)
+        {
+            // No interactive circuit yet - the log stays at its current scroll position.
+        }
+    }
+}

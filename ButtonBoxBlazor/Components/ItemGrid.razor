@@ -16,6 +16,9 @@
                 case OpacityInfoTileDef opacityTile:
                     <OpacityInfoTile Definition="opacityTile" />
                     break;
+                case HudMessagesDef hudMessages:
+                    <HudMessagesTile Definition="hudMessages" />
+                    break;
             }
         }
     </CascadingValue>
@@ -52,14 +55,14 @@
     protected override void OnParametersSet()
     {
         _outline = ShowBlockOutline ? [.. GridBlockOutline.Build(Items)] : [];
-        _titles = [.. Items.Where(i => i.BlockId is not null).GroupBy(i => i.BlockId!).Select(ToTitle)];
+        _titles = [.. Items.Where(i => i.BlockId is not null && BlockCatalog.ById[i.BlockId].ShowTitle).GroupBy(i => i.BlockId!).Select(ToTitle)];
     }
 
     // Anchored at the block's first button, spanning the block width so long names are not cut off.
     private static BlockTitle ToTitle(IGrouping<string, GridItemDef> block)
     {
         var first = block.OrderBy(i => i.Row).ThenBy(i => i.Col).First();
-        return new BlockTitle(BlockCatalog.ById[block.Key].Name, first.Row, first.Col, block.Max(i => i.Col) - first.Col + 1);
+        return new BlockTitle(BlockCatalog.ById[block.Key].Name, first.Row, first.Col, block.Max(i => i.Col + i.ColSpan) - first.Col);
     }
 
     private sealed record BlockTitle(string Text, int Row, int Col, int Span);

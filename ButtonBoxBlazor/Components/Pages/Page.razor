@@ -4,7 +4,7 @@
 @implements IDisposable
 @inject LayoutService Layout
 
-<PageTitle>@Number</PageTitle>
+<PageTitle>@Title</PageTitle>
 
 @if (Layout.Pages.Count == 0)
 {
@@ -24,6 +24,10 @@ else
     public int? N { get; set; }
 
     private int Number => N ?? 1;
+
+    private string Title => Number >= 1 && Number <= Layout.Pages.Count
+        ? Layout.Pages[Number - 1].Name
+        : $"Page {Number}";
 
     protected override void OnInitialized() => Layout.Changed += OnLayoutChanged;
 

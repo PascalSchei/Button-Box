@@ -5,7 +5,7 @@ public static class GridBlockOutline
     {
         foreach (var block in items.Where(i => i.BlockId is not null).GroupBy(i => i.BlockId))
         {
-            var cells = block.Select(i => (i.Row, i.Col)).ToHashSet();
+            var cells = block.SelectMany(i => i.Cells).ToHashSet();
             foreach (var (row, col) in cells)
             {
                 var cell = new GridOutlineCell(row, col,

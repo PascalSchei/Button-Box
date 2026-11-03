@@ -60,8 +60,8 @@ html:has(.settings-page) {
     height: 100%;
     /* Content sizes in container units of the cell (.grid-item), resolved where they are used. */
     --icon-size: 38cqmin;
-    --text-size: 13cqmin;
-    --key-size: 11cqmin;
+    --text-size: 16.9cqmin;
+    --key-size: 14cqmin;
 }
 
 .button-grid.only-icon {
@@ -88,11 +88,11 @@ html:has(.settings-page) {
 }
 
 .button-grid.only-text {
-    --text-size: 16cqmin;
+    --text-size: 20.8cqmin;
 }
 
 .button-grid.only-key {
-    --key-size: 16cqmin;
+    --key-size: 20.8cqmin;
 }
 
 /* Sits in the gap below the block's first button: centered on the row gap, bottom edge at the cell's bottom edge before the shift. */
@@ -118,8 +118,8 @@ html:has(.settings-page) {
 
 .button-grid.show-all {
     --icon-size: 28cqmin;
-    --text-size: 11cqmin;
-    --key-size: 10cqmin;
+    --text-size: 14.3cqmin;
+    --key-size: 13cqmin;
 }
 
 
@@ -128,6 +128,50 @@ html:has(.settings-page) {
     border: 0.3em solid currentColor;
     color: var(--btn-color, white);
     touch-action: manipulation;
+}
+
+/* Fill-level gauge: a nested overlay painted as a bottom-up gradient. The overlay is the only thing
+   that updates while draining, so the container-type:size tile element itself never changes and the
+   grid layout stays stable (changing the tile's own class/style triggers a container-query reflow loop). */
+@property --fill-alpha {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 0.4;
+}
+
+.grid-item.level-fill {
+    position: relative;
+}
+
+.grid-item.level-fill > :not(.fill-overlay) {
+    position: relative;
+    z-index: 1;
+}
+
+.fill-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background-image: linear-gradient(to top,
+            color-mix(in srgb, var(--btn-color, white) calc(var(--fill-alpha) * 100%), transparent) var(--fill-level, 0%),
+            transparent var(--fill-level, 0%));
+}
+
+/* While draining: toggle roughly once per second between visible and transparent. */
+.fill-overlay.blinking {
+    animation: fill-blink 2s steps(1, end) infinite;
+}
+
+@keyframes fill-blink {
+    0%, 50% {
+        --fill-alpha: 0.4;
+    }
+
+    50.01%, 100% {
+        --fill-alpha: 0;
+    }
 }
 
 .grid-item {
@@ -171,6 +215,7 @@ html:has(.settings-page) {
     overflow-wrap: anywhere;
     max-width: 100%;
     font-size: var(--text-size);
+    /* text-transform: uppercase; */
     min-height: calc(1.15em * 2);
     line-height: 1.15em;
 }
@@ -184,9 +229,9 @@ html:has(.settings-page) {
 .btn-key {
     display: inline-block;
     max-width: 100%;
-    padding: 0 0.4em;
-    border: 1px solid currentColor;
-    border-radius: 0.3em;
+    padding: 0.1em 0.5em;
+    background-color: color-mix(in srgb, var(--btn-color, white) 30%, black);
+    border-radius: 0.4em;
     font-size: var(--key-size);
     overflow-wrap: anywhere;
 }
@@ -227,13 +272,72 @@ html:has(.settings-page) {
 
 .info-tile {
     border: none;
-    background-color: #1a1a1a;
+    color: var(--btn-color, white);
+    background-color: color-mix(in srgb, var(--btn-color, black) 20%, black);
 }
 
 .info-tile .info-value {
     font-size: min(26cqh, 16cqw);
     max-width: 100%;
     overflow-wrap: anywhere;
+}
+
+/* Text lives in an inner element: cq units on the container itself would resolve against an ancestor. */
+.hud-messages {
+    color: var(--btn-color, white);
+    background-color: color-mix(in srgb, var(--btn-color, black) 12%, black);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    overflow: hidden;
+}
+
+.hud-messages-title {
+    flex: none;
+    padding: 0.2rem 0.4rem 0;
+    font-size: calc(var(--gap) + 0.25rem);
+    font-weight: bold;
+    line-height: 1;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Short logs sit at the bottom; longer ones scroll. */
+.hud-messages-scroll {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4em;
+    width: 100%;
+    flex: 1 1 0;
+    min-height: 0;
+    box-sizing: border-box;
+    padding: 0.8em 1em;
+    overflow-y: auto;
+    text-align: left;
+    font-size: 4.5cqh;
+    font-weight: normal;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, currentColor 70%, transparent) transparent;
+    touch-action: pan-y;
+}
+
+.hud-messages-scroll > :first-child {
+    margin-top: auto;
+}
+
+.hud-message-line {
+    flex: none;
+    overflow-wrap: anywhere;
+}
+
+.hud-message-line:not(:last-child) {
+    opacity: 0.85;
 }
 
 .settings-page {
@@ -261,6 +365,18 @@ html:has(.settings-page) {
 .settings-row > * {
     min-width: 0;
     max-width: 100%;
+}
+
+.settings-action {
+    align-items: start;
+}
+
+.settings-action > .btn {
+    justify-self: start;
+}
+
+.settings-action p:first-child {
+    margin-top: 0;
 }
 
 .settings-check {
@@ -301,6 +417,46 @@ html:has(.settings-page) {
     flex-shrink: 0;
     gap: var(--space-sm);
     margin-left: auto;
+}
+
+.settings-page-break {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--gap);
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid #555;
+}
+
+.settings-page-break-label {
+    flex: 1 1 8rem;
+    min-width: 0;
+    font-weight: 600;
+}
+
+.settings-page-name {
+    flex: 1 1 12rem;
+    max-width: 22rem;
+}
+
+.settings-page-break .settings-block-buttons {
+    flex-wrap: wrap;
+    flex-shrink: 1;
+    max-width: 100%;
+}
+
+.settings-page-light,
+.settings-page-dark {
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+}
+
+.settings-page-light {
+    background-color: #252525;
+}
+
+.settings-page-dark {
+    background-color: #121212;
 }
 
 /* Use the available content width, including when the sidebar is expanded. */

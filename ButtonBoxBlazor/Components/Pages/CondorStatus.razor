@@ -14,15 +14,15 @@
 </div>
 
 @code {
-    private static readonly InfoTileDef[] InfoTiles =
+    private static readonly GridItemDef[] InfoTiles =
     [
-        new(0, 0, "Time", t => t.Time.ToString("F2", CultureInfo.InvariantCulture) + " h"),
-        new(0, 1, "Height (CG)", t => t.Height.ToString("F1", CultureInfo.InvariantCulture) + " m"),
-        new(0, 2, "Wheel height", t => t.WheelHeight.ToString("F1", CultureInfo.InvariantCulture) + " m"),
-        new(0, 3, "Flaps", t => t.Flaps.ToString("F0", CultureInfo.InvariantCulture)),
-        new(0, 4, "MacCready", t => t.MacCready.ToString("F2", CultureInfo.InvariantCulture) + " m/s"),
-        new(1, 0, "Water ballast", t => t.Water.ToString("F0", CultureInfo.InvariantCulture) + " kg"),
-        new(1, 1, "HUD", t => t.HudMessages)
+        new InfoTileDef(0, 0, "Time", t => t.Time.ToString("F2", CultureInfo.InvariantCulture) + " h"),
+        new InfoTileDef(0, 1, "Height (CG)", t => t.Height.ToString("F1", CultureInfo.InvariantCulture) + " m"),
+        new InfoTileDef(0, 2, "Wheel height", t => t.WheelHeight.ToString("F1", CultureInfo.InvariantCulture) + " m"),
+        new InfoTileDef(0, 3, "Flaps", t => t.Flaps.ToString("F0", CultureInfo.InvariantCulture)),
+        new InfoTileDef(0, 4, "MacCready", t => t.MacCready.ToString("F2", CultureInfo.InvariantCulture) + " m/s"),
+        new InfoTileDef(1, 0, "Water ballast", t => t.Water.ToString("F0", CultureInfo.InvariantCulture) + " kg"),
+        new HudMessagesDef(1, 1, "wheat") { RowSpan = 3, ColSpan = 3 }
     ];
 
     private bool Connected => Telemetry.IsConnected;

@@ -66,6 +66,28 @@ public sealed class ControlsStore
         Reload();
     }
 
+    public void Reset()
+    {
+        lock (_lock)
+        {
+            try
+            {
+                File.Delete(_filePath);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                _logger.LogError(ex, "Controls settings '{Path}' could not be reset.", _filePath);
+                throw;
+            }
+
+            _iniPath = null;
+            _keys = new Dictionary<int, int>();
+            Status = null;
+        }
+
+        Changed?.Invoke();
+    }
+
     private static string Normalize(string path)
     {
         try

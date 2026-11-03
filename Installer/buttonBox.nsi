@@ -1,6 +1,6 @@
 Unicode true
 !define APP "Button Box"
-!define VERSION "1.2.0"
+!define VERSION "1.3.0"
 !define PUBLISH "..\ButtonBoxBlazor\bin\Publish"
 !define ASPNET_URL "https://aka.ms/dotnet/10.0/aspnetcore-runtime-win-x64.exe"
 !define NETCORE_URL "https://aka.ms/dotnet/10.0/dotnet-runtime-win-x64.exe"

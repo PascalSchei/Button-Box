@@ -7,7 +7,8 @@ using System.Globalization;
 public static class BlockCatalog {
   public const int MaxRecommendedSize = 3;
 
-  private const int Step = 10;
+    // Step for opacity buttons; the actual opacity is clamped to [0, 100].
+    private const int Step = 10;
 
   // Blocks below must stay above All (static initializers run in textual order).
 
@@ -32,7 +33,7 @@ public static class BlockCatalog {
   // Flight info 3x1
   private static readonly GridBlock FlightInfo = new("lx-flight-info", "Flight info", "lightsteelblue",
       new InfoTileDef(0, 0, "Time", t => TimeSpan.FromHours(t.Time % 24).ToString(@"hh\:mm\:ss")),
-      new InfoTileDef(1, 0, "Water", t => t.Water.ToString("F0", CultureInfo.InvariantCulture) + " kg"),
+      new InfoTileDef(1, 0, "Water", t => t.Water.ToString("F0", CultureInfo.InvariantCulture) + " kg", Level: t => t.Water),
       new InfoTileDef(2, 0, "Above ground", t => t.Height.ToString("F0", CultureInfo.InvariantCulture) + " m"));
 
   // MacCready 3x1
@@ -75,6 +76,10 @@ public static class BlockCatalog {
       new ButtonDef(0, 0, "Backspace", "Send message", "Backspace", "icons/send.svg", Function: 3074),
       new ButtonDef(1, 0, "D", "Extend chat log", "D", "icons/chat.svg", Function: 3078));
 
+  // HUD messages 3x3
+  private static readonly GridBlock HudMessages = new("lx-hud-messages", "HUD messages", "white",
+      new HudMessagesDef(0, 0) { RowSpan = 3, ColSpan = 3 }) { ShowTitle = false, HiddenByDefault = true };
+
   // Release / Smoke / Gear 3x3
   private static readonly GridBlock Release = new("Release", "Release / Smoke / Gear", "#a0a0ff",
       new ButtonDef(0, 0, "R", "Release", "R", "icons/disconnect.svg", Function: 3016),
@@ -92,6 +97,14 @@ public static class BlockCatalog {
       new ButtonDef(0, 1, "A", "Auto rudder toggle", "A", "icons/rudder.svg", Function: 3073),
       new ButtonDef(1, 0, "H", "Lift helpers", "H", "icons/lift.svg", Function: 3080),
       new ButtonDef(1, 1, "J", "Task helpers", "J", "icons/task.svg", Function: 3081));
+
+  // Instructor actions 3x3 (cross). M cycles page 0 (off) / 1 (wind) / 2 (wing drop, lift, sink); the arrows act on the current page.
+  private static readonly GridBlock Instructor = new("instructor", "Instructor actions", "lightcoral",
+      new ButtonDef(0, 1, "Up", "Wind back<br>Lift", "Up", "icons/arrow-up.svg"),
+      new ButtonDef(1, 0, "Left", "Wind right<br>Wing drop left", "Left", "icons/arrow-left.svg"),
+      new ButtonDef(1, 1, "M", "Instructor actions", "M"),
+      new ButtonDef(1, 2, "Right", "Wind left<br>Wing drop right", "Right", "icons/arrow-right.svg"),
+      new ButtonDef(2, 1, "Down", "Wind front<br>Sink", "Down", "icons/arrow-down.svg"));
 
   // View control 3x3
   private static readonly GridBlock CamView = new("cam-view", "View control", "yellowgreen",
@@ -159,7 +172,14 @@ public static class BlockCatalog {
 
   private static readonly GridBlock AirBrakes = new("AirBrakes", "Airbrakes", "yellow",
       new ButtonDef(0, 0, "N", "AirBrakes up", "N", "icons/arrow-triangle-up.svg"),
-      new ButtonDef(1, 0, "B", "AirBrakes down", "B", "icons/arrow-triangle-down.svg"));
+      new ButtonDef(1, 0, "B", "AirBrakes down", "B", "icons/arrow-triangle-down.svg"),
+      new ButtonDef(2, 0, "Period", "Wheel brake", ".", "icons/wheel.svg"));
+
+  // Rudder 1x3
+  private static readonly GridBlock Rudder = new("rudder", "Rudder", "khaki",
+      new ButtonDef(0, 0, "Z", "Rudder left", "Z", "icons/arrow-left.svg"),
+      new ButtonDef(1, 0, "C", "Rudder center", "C", "icons/center.svg", Function: 3006),
+      new ButtonDef(2, 0, "X", "Rudder right", "X", "icons/arrow-right.svg"));
 
   /// <summary>All blocks in the default order.</summary>
   public static readonly IReadOnlyList<GridBlock> All =
@@ -183,7 +203,10 @@ public static class BlockCatalog {
     CamView,
     TrimmerFlaps,
     AirBrakes,
-    Radio
+    Rudder,
+    Instructor,
+    Radio,
+    HudMessages
   ];
 
   public static readonly IReadOnlyDictionary<string, GridBlock> ById = All.ToDictionary(b => b.Id);
@@ -197,10 +220,10 @@ public static class BlockCatalog {
 
     foreach(var block in All) {
       // Items on the same cell are stacked by the CSS grid without any error.
-      var overlap = block.Items.GroupBy(i => (i.Row, i.Col)).FirstOrDefault(g => g.Count() > 1);
+      var overlap = block.Items.SelectMany(i => i.Cells.Select(c => (Cell: c, Item: i))).GroupBy(x => x.Cell).FirstOrDefault(g => g.Count() > 1);
       if(overlap is not null) {
         throw new InvalidOperationException(
-            $"Block '{block.Id}': row {overlap.Key.Row}, col {overlap.Key.Col} is used by " + string.Join(" and ", overlap.Select(Describe)));
+            $"Block '{block.Id}': row {overlap.Key.Row}, col {overlap.Key.Col} is used by " + string.Join(" and ", overlap.Select(x => Describe(x.Item))));
       }
 
       if(block.Height > MaxRecommendedSize) {
@@ -214,6 +237,7 @@ public static class BlockCatalog {
     InfoTileDef t => $"info tile '{t.Label}'",
     OpacityButtonDef o => $"opacity button '{o.Label}'",
     OpacityInfoTileDef o => $"opacity tile '{o.Label}'",
+    HudMessagesDef => "HUD messages",
     _ => item.GetType().Name
   };
 }

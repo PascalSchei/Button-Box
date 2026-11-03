@@ -22,6 +22,9 @@ publish/
 # Logs
 *.log
 
+# Installation files
+*.exe
+
 # Arbeitsdaten
 workdata/
 

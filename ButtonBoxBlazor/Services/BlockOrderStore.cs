@@ -64,6 +64,26 @@ public sealed class BlockOrderStore
         Changed?.Invoke();
     }
 
+    public void Reset()
+    {
+        lock (_lock)
+        {
+            try
+            {
+                File.Delete(_filePath);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                _logger.LogError(ex, "Block order '{Path}' could not be reset.", _filePath);
+                throw;
+            }
+
+            _order = Normalize(null);
+        }
+
+        Changed?.Invoke();
+    }
+
     // Unknown ids are dropped, catalog blocks missing from the stored order are appended.
     private static string[] Normalize(IEnumerable<string>? stored) =>
         [.. (stored ?? []).Where(BlockCatalog.ById.ContainsKey).Distinct().Concat(BlockCatalog.All.Select(b => b.Id)).Distinct()];

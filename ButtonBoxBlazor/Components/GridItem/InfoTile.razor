@@ -1,6 +1,14 @@
 @inherits TelemetryComponentBase
 
-<div class="info-tile grid-item" style="@TileStyle">
+@* Keep the tile element's own class/style constant: re-rendering a container-type:size element's
+   own attributes triggers a container-query layout feedback loop. The fill lives in a nested overlay
+   whose style is the only thing that updates while draining. *@
+<div class="info-tile grid-item @(IsLevel ? "level-fill" : "")" style="@TileStyle">
+    @if (IsLevel)
+    {
+        <span class="fill-overlay @(_indicator.IsBlinking ? "blinking" : "")"
+              style="--fill-level:@FillPercent%" aria-hidden="true"></span>
+    }
     <span class="info-value">@Definition.Format(Telemetry.Current)</span>
     @if (Display.ShowText)
     {
@@ -15,5 +23,58 @@
     [CascadingParameter]
     public ButtonDisplay Display { get; set; } = ButtonDisplay.Default;
 
-    private string TileStyle => Definition.Style + "color:var(--btn-color, white); background-color:color-mix(in srgb, var(--btn-color, black) 8%, black);";
+    private readonly FillLevelIndicator _indicator = new();
+    private Timer? _blinkTimer;
+
+    private string TileStyle => Definition.Style;
+
+    private bool IsLevel => Definition.Level is not null;
+
+    private string FillPercent =>
+        (_indicator.FillFraction * 100).ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        if (IsLevel)
+        {
+            _blinkTimer = new Timer(_ => StopBlinkIfElapsed());
+            Telemetry.Updated += OnLevelTelemetry;
+            _indicator.Update(Definition.Level!(Telemetry.Current), DateTime.UtcNow);
+        }
+    }
+
+    private void OnLevelTelemetry()
+    {
+        _indicator.Update(Definition.Level!(Telemetry.Current), DateTime.UtcNow);
+
+        // Keep blinking alive for BlinkHold after the last change, then re-render to show it steady.
+        if (_indicator.IsBlinking)
+        {
+            _blinkTimer?.Change(_indicator.BlinkHold, Timeout.InfiniteTimeSpan);
+        }
+
+        // The base class already re-renders on every telemetry update.
+    }
+
+    private void StopBlinkIfElapsed()
+    {
+        _indicator.Tick(DateTime.UtcNow);
+        if (!_indicator.IsBlinking)
+        {
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public override void Dispose()
+    {
+        if (IsLevel)
+        {
+            Telemetry.Updated -= OnLevelTelemetry;
+        }
+
+        _blinkTimer?.Dispose();
+        base.Dispose();
+    }
 }

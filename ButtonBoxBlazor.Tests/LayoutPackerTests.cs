@@ -87,6 +87,42 @@ public class LayoutPackerTests
     }
 
     [Fact]
+    public void HoleBelowSkyline_IsNotBackfilled()
+    {
+        // The wide block rests on the tall one and leaves a free 3x3 hole beside it.
+        GridBlock[] blocks = [Block("tall", 2, 3), Block("wide", 5, 3), Block("fill", 3, 3)];
+
+        var pages = LayoutPacker.Pack(blocks, 5, 6);
+
+        Assert.Equal(2, pages.Count);
+        Assert.Contains((0, 0), Cells(pages[1]));
+    }
+
+    [Fact]
+    public void FreeAreaBottomRight_IsUsedBeforeNewPage()
+    {
+        GridBlock[] blocks = [Block("a", 3, 4), Block("b", 3, 3), Block("test", 3, 3)];
+
+        var cells = Cells(Assert.Single(LayoutPacker.Pack(blocks, 6, 6))).ToList();
+
+        Assert.Contains((3, 3), cells);
+        Assert.Contains((5, 5), cells);
+    }
+
+    // [Fact]
+    // public void FreeAreaBottomRight_IsUsedBeforeNewPage2()
+    // {
+    //     GridBlock[] blocks = [Block("a", 2, 2), Block("b", 1, 4), Block("c", 3, 2), Block("test", 3, 3)];
+
+    //     var temp = LayoutPacker.Pack(blocks, 6, 6);
+
+    //     var cells = Cells(Assert.Single(LayoutPacker.Pack(blocks, 6, 6))).ToList();
+
+    //     Assert.Contains((3, 3), cells);
+    //     Assert.Contains((5, 5), cells);
+    // }
+
+    [Fact]
     public void BlockLargerThanGrid_IsSkipped()
     {
         var pages = LayoutPacker.Pack([Block("big", 5, 2), Block("a", 1, 1)], 3, 3);

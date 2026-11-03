@@ -3,7 +3,10 @@
 @implements IDisposable
 @inject LayoutService Layout
 @inject BlockOrderStore OrderStore
+@inject PageBreakStore PageBreaks
 @inject ControlsStore Controls
+@inject LayoutSettingsStore LayoutSettings
+@inject NetworkSettingsStore Network
 
 <PageTitle>Settings</PageTitle>
 
@@ -89,28 +92,116 @@
                 <input type="checkbox" checked="@Layout.ShowBlockOutline"
                        @onchange="e => Layout.SetBlockOutline((bool)e.Value!)" /> Show block outline
             </label>
-            @for (var i = 0; i < order.Count; i++)
-            {
-                var block = BlockCatalog.ById[order[i]];
-                var index = i;
-                <div class="settings-block">
-                    <label class="settings-check">
-                        <input type="checkbox" checked="@Layout.IsSelected(block.Id)"
-                               @onchange="e => Layout.SetBlockSelected(block.Id, (bool)e.Value!)" />
-                        @block.Name (@block.Width x @block.Height)
-                        @if (block.Width > Layout.Cols || block.Height > Layout.Rows)
-                        {
-                            <span class="text-warning">does not fit the grid</span>
-                        }
-                    </label>
-                    <span class="settings-block-buttons">
-                        <button type="button" class="btn btn-secondary" disabled="@(index == 0)" aria-label="Move @block.Name up"
-                                @onclick="() => OrderStore.Move(block.Id, -1)">&uarr;</button>
-                        <button type="button" class="btn btn-secondary" disabled="@(index == order.Count - 1)" aria-label="Move @block.Name down"
-                                @onclick="() => OrderStore.Move(block.Id, 1)">&darr;</button>
-                    </span>
-                </div>
+            @{
+                var settingsPageIndex = -1;
             }
+            @for (var i = 0; i <= order.Count; i++)
+            {
+                var index = i;
+                @foreach (var layoutPage in Layout.Pages.Where(candidate => (candidate.BreakPosition ?? candidate.StartOrderIndex) == index))
+                {
+                    var position = layoutPage.BreakPosition ?? layoutPage.StartOrderIndex;
+                    var isFirstPage = layoutPage == Layout.Pages[0];
+                    var pageKey = layoutPage.BreakId ?? $"auto-{position}";
+                    settingsPageIndex++;
+                    <div class="settings-page-break @(settingsPageIndex % 2 == 0 ? "settings-page-light" : "settings-page-dark")" @key="pageKey">
+                        <span class="settings-page-break-label">@layoutPage.Name</span>
+                        @if (PageBreaks.IsCustomized(position, layoutPage.BreakId))
+                        {
+                            <input type="text" class="form-control settings-page-name" value="@layoutPage.Name" maxlength="60" aria-label="Page name"
+                                   @onchange="e => PageBreaks.Rename(position, e.Value?.ToString(), layoutPage.BreakId)" />
+                        }
+                        <span class="settings-block-buttons">
+                            <button type="button" class="btn btn-secondary" @onclick="() => PageBreaks.AddAfter(position, layoutPage.BreakId)">Add Page</button>
+                            <button type="button" class="btn btn-secondary" disabled="@(isFirstPage || !PageBreaks.CanMove(position, -1, layoutPage.BreakId))" aria-label="Move @layoutPage.Name up"
+                                    @onclick="() => PageBreaks.Move(position, -1, layoutPage.BreakId)">&uarr;</button>
+                            <button type="button" class="btn btn-secondary" disabled="@(isFirstPage || !PageBreaks.CanMove(position, 1, layoutPage.BreakId))" aria-label="Move @layoutPage.Name down"
+                                    @onclick="() => PageBreaks.Move(position, 1, layoutPage.BreakId)">&darr;</button>
+                            @if (PageBreaks.IsCustomized(position, layoutPage.BreakId))
+                            {
+                                <button type="button" class="btn btn-danger"
+                                        aria-label="@(isFirstPage ? $"Reset customization {layoutPage.Name}" : $"Delete page break {layoutPage.Name}")"
+                                        @onclick="() => PageBreaks.Delete(position, layoutPage.BreakId)">Delete</button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-secondary" @onclick="() => PageBreaks.EnsureBreak(position, layoutPage.BreakId)">Customize</button>
+                            }
+                        </span>
+                    </div>
+                }
+                @if (index < order.Count)
+                {
+                    var block = BlockCatalog.ById[order[index]];
+                    <div class="settings-block @(settingsPageIndex < 0 ? "" : settingsPageIndex % 2 == 0 ? "settings-page-light" : "settings-page-dark")">
+                        <label class="settings-check">
+                            <input type="checkbox" checked="@Layout.IsSelected(block.Id)"
+                                   @onchange="e => Layout.SetBlockSelected(block.Id, (bool)e.Value!)" />
+                            @block.Name (@block.Width x @block.Height)
+                            @if (block.Width > Layout.Cols || block.Height > Layout.Rows)
+                            {
+                                <span class="text-warning">does not fit the grid</span>
+                            }
+                        </label>
+                        <span class="settings-block-buttons">
+                            <button type="button" class="btn btn-secondary" disabled="@(!Layout.CanMoveBlock(block.Id, -1))" aria-label="Move @block.Name up"
+                                    @onclick="() => Layout.MoveBlock(block.Id, -1)">&uarr;</button>
+                            <button type="button" class="btn btn-secondary" disabled="@(!Layout.CanMoveBlock(block.Id, 1))" aria-label="Move @block.Name down"
+                                    @onclick="() => Layout.MoveBlock(block.Id, 1)">&darr;</button>
+                        </span>
+                    </div>
+                }
+            }
+        </section>
+
+        <section>
+            <h2>Network</h2>
+            <div class="settings-row settings-action">
+                @if (Network.AllowAllNetworks)
+                {
+                    <button type="button" class="btn btn-secondary" @onclick="() => Network.SetAllowAllNetworks(false)">Local networks only</button>
+                    <div>
+                        <p class="text-warning" role="alert">All networks are allowed. Anyone who can reach this PC on port 54738 can press keys on it.</p>
+                    </div>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-danger" disabled="@_confirmAllowAll" @onclick="() => _confirmAllowAll = true">Allow all networks</button>
+                    <div>
+                        <p>Only devices in your local network (home Wi-Fi, LAN, phone hotspot) can connect. Allow all networks if you connect through a VPN such as Tailscale and get 403 Forbidden.</p>
+                        @if (_confirmAllowAll)
+                        {
+                            <p class="text-warning" role="alert">Warning: Button Box has no password. With all networks allowed, anyone who can reach this PC, for example from the internet through a forwarded port, can press keys on it. Only enable this in a network you trust.</p>
+                            <button type="button" class="btn btn-danger" @onclick="ConfirmAllowAll">Allow all networks</button>
+                            <button type="button" class="btn btn-secondary" @onclick="() => _confirmAllowAll = false">Cancel</button>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+
+        <section>
+            <h2>Reset</h2>
+            <div class="settings-row settings-action">
+                <button type="button" class="btn btn-danger" disabled="@(_browsing || _confirmReset)" @onclick="RequestReset">Reset</button>
+                <div>
+                    <p>Restore default settings for all devices, including grid, display, blocks, page breaks, page names, the controls.ini path and the network setting. The controls.ini file itself is not changed.</p>
+                    @if (_confirmReset)
+                    {
+                        <p role="alert">Reset all settings? This cannot be undone.</p>
+                        <button type="button" class="btn btn-danger" disabled="@_browsing" @onclick="ResetSettings">Reset all settings</button>
+                        <button type="button" class="btn btn-secondary" @onclick="() => _confirmReset = false">Cancel</button>
+                    }
+                    @if (_resetError is not null)
+                    {
+                        <p class="text-danger mt-2" role="alert">@_resetError</p>
+                    }
+                    @if (_resetCompleted)
+                    {
+                        <p class="mt-2" role="status">All settings have been reset to defaults.</p>
+                    }
+                </div>
+            </div>
         </section>
     }
 </div>
@@ -123,8 +214,50 @@
 
     private bool _browsing;
     private IReadOnlyList<string>? _controlsCandidates;
+    private bool _confirmReset;
+    private bool _confirmAllowAll;
+    private bool _resetCompleted;
+    private string? _resetError;
 
-    protected override void OnInitialized() => Layout.Changed += OnLayoutChanged;
+    private void ConfirmAllowAll()
+    {
+        _confirmAllowAll = false;
+        Network.SetAllowAllNetworks(true);
+    }
+
+    private void RequestReset()
+    {
+        _confirmReset = true;
+        _resetCompleted = false;
+        _resetError = null;
+    }
+
+    private void ResetSettings()
+    {
+        _resetError = null;
+        _resetCompleted = false;
+        try
+        {
+            PageBreaks.Reset();
+            OrderStore.Reset();
+            LayoutSettings.Reset();
+            Controls.Reset();
+            Network.Reset();
+            _controlsCandidates = null;
+            _confirmReset = false;
+            _resetCompleted = true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _resetError = "Some settings could not be reset. Changes already applied remain in effect. Check the server log and try again.";
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        Layout.Changed += OnLayoutChanged;
+        Network.Changed += OnLayoutChanged;
+    }
 
     // The dialog opens on the machine running the server.
     private async Task BrowseControlsAsync()
@@ -174,5 +307,9 @@
 
     private void OnLayoutChanged() => InvokeAsync(StateHasChanged);
 
-    public void Dispose() => Layout.Changed -= OnLayoutChanged;
+    public void Dispose()
+    {
+        Layout.Changed -= OnLayoutChanged;
+        Network.Changed -= OnLayoutChanged;
+    }
 }

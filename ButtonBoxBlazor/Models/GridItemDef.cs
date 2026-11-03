@@ -7,12 +7,24 @@ public record GridItemDef(int Row, int Col, string? Color)
     /// <summary>Owning block, retained when the item is placed on a layout page.</summary>
     public string? BlockId { get; init; }
 
+    /// <summary>Number of grid rows the item occupies.</summary>
+    public int RowSpan { get; init; } = 1;
+
+    /// <summary>Number of grid columns the item occupies.</summary>
+    public int ColSpan { get; init; } = 1;
+
+    /// <summary>Every grid cell covered by the item.</summary>
+    public IEnumerable<(int Row, int Col)> Cells =>
+        from row in Enumerable.Range(Row, RowSpan)
+        from col in Enumerable.Range(Col, ColSpan)
+        select (row, col);
+
     /// <summary>Inline style placing the item in the grid and exposing <c>--btn-color</c>.</summary>
     public string Style
     {
         get
         {
-            var style = $"grid-row:{Row + 1}; grid-column:{Col + 1};";
+            var style = $"grid-row:{Row + 1} / span {RowSpan}; grid-column:{Col + 1} / span {ColSpan};";
             return Color is { } color ? style + $"--btn-color:{color};" : style;
         }
     }

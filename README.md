@@ -1,7 +1,5 @@
 # Condor Button Box
 
-
-
 A touch-friendly control panel for [Condor Soaring](https://www.condorsoaring.com/) that runs in your web browser. Instead of memorizing dozens of keyboard shortcuts for airbrakes, flaps, radio, LX instruments and more, you get a grid of labeled buttons you can tap on a tablet, phone, or a second PC while you fly.
 
 <p align="center">
@@ -18,6 +16,7 @@ A touch-friendly control panel for [Condor Soaring](https://www.condorsoaring.co
 - [Using your controls.ini](#using-your-controlsini)
 - [Setting up UDP.ini](#setting-up-udpini)
 - [Customization](#customization)
+- [Network access and security](#network-access-and-security)
 - [Known limitations](#known-limitations)
 - [FAQ](#faq)
 - [Demo / Pictures](#demo--pictures)
@@ -32,7 +31,7 @@ A touch-friendly control panel for [Condor Soaring](https://www.condorsoaring.co
 
 ### 1. Start the app on the flight PC
 
-Start **Button Box** via the desktop shortcut or the Start menu (or double-click `ButtonBoxBlazor.exe` in the installation folder).
+Start **Button Box** via the desktop shortcut (or double-click `ButtonBoxBlazor.exe` in the installation folder).
 
 The first time it runs, **Windows Defender Firewall** will show a warning asking whether to allow the app to communicate on your network. You must confirm/allow this (at least for "Private networks") — otherwise your tablet won't be able to reach it.
 
@@ -50,7 +49,7 @@ As a first test, you can open that address in a browser on your flight PC.
 
 Then enter exactly that address in the browser of your tablet/phone/notebook. You should see the button grid. Add it to your home screen / bookmarks for quick access next time.
 
-If several addresses are listed, use the one from the network your devices share (usually Wi-Fi or Ethernet).
+If several addresses are listed, use the one from the network your devices share (usually Wi-Fi or Ethernet). Addresses of virtual adapters (Hyper-V, WSL, Docker, often ending in `.1`) are only reachable from the flight PC itself. Public internet addresses are never listed.
 
 ### 3. Test a button in Condor
 
@@ -84,6 +83,7 @@ If you opened the browser there for the first test, it will not work.
 - **Grid blocks** — Buttons that belong together (for example flaps or LX keys) are grouped into blocks with a clear outline. You see at a glance which controls belong to each other.
 - **Smart layout via grid blocks** — Instead of dragging single buttons around the grid, you manage whole blocks. Show or hide blocks you don't need, change their order, and blocks that no longer fit are automatically moved to a new page.
 - **Responsive design** — The grid adapts to the screen size and works on tablets, smartphones and PCs.
+- **Local network only** — Connections from outside your local network are rejected by default. See [Network access and security](#network-access-and-security).
 
 ## Using your controls.ini
 
@@ -138,7 +138,11 @@ Open the **Settings** page to adapt the button grid to your needs.
 
 ### Grid size
 
-**Columns** and **Rows** define how many buttons fit on one page. The number of pages is created automatically.
+The **Preset** list offers ready-made grid sizes (for example **Tablet**). **Columns** and **Rows** define how many buttons fit on one page; changing them switches the preset to **Custom**. The number of pages is created automatically.
+
+### Button display
+
+Choose what each button shows: **Icon**, **Text** and **Key** (the keyboard key it sends). At least one of them stays enabled.
 
 ### Grid blocks
 
@@ -147,6 +151,41 @@ Buttons that belong together are grouped into grid blocks. Instead of showing al
 - **Show or hide:** Use the checkbox next to a block to show or hide it.
 - **Order:** Move a block up or down with the arrow buttons in the **Blocks** list. The order in the list is the order on the pages.
 - **Placement:** Blocks are placed automatically from the top left to the right. When a page is full, the next block automatically moves to the next page.
+- **Block outline:** **Show block outline** draws a frame around each block on the button pages.
+
+### Pages
+
+Pages are created automatically when the selected blocks no longer fit the grid. In **Settings > Blocks**, each page starts with a page-name row, initially **Page 1**, **Page 2**, and so on. The page row and the blocks below it share a background shade, alternating between lighter and darker for each page so you can see which blocks belong together.
+
+- **Customize:** Click **Customize** on a page row to edit its name. Customized pages stay in edit mode when you reopen Settings.
+- **Add Page:** Inserts a new page row directly below the current page row, with no block between them. The new page is immediately editable. Empty pages are allowed and saved.
+- **Move a page break:** Use the arrows on a page row to move the break up or down by one block. Two directly adjacent page rows can also swap places, including their names. The first page row stays fixed.
+- **Move a block across a page break:** A block's arrows swap it with the immediately adjacent row. If that row is a page break, the block crosses the break instead of swapping with the next block.
+- **Delete:** Removes a customized page break and lets the blocks flow together again. On the first page, **Delete** only resets its name and customization; the first page itself remains.
+
+Automatic page breaks are still added wherever the grid fills up, even when you use custom breaks. Moving an automatic break makes it a saved custom break.
+
+Page names appear in the expanded left navigation and in the browser tab. The collapsed navigation continues to show only page numbers. Page names and custom breaks are saved and shared by all connected devices.
+
+### Reset
+
+**Settings > Reset** restores the defaults for all devices after a confirmation: grid, button display, block selection and order, page breaks, page names, the path to `controls.ini` and the [network setting](#allowing-all-networks). The `controls.ini` file itself is not changed. The defaults also apply after a restart.
+
+## Network access and security
+
+Button Box sends key presses to your flight PC, so only devices in your own network may use it. The app rejects every connection that does not come from one of these sources (HTTP status 403):
+
+- the flight PC itself (`127.0.0.1`)
+- private network ranges: `10.x.x.x`, `172.16.x.x` to `172.31.x.x`, `192.168.x.x` and `169.254.x.x`. This includes the usual home Wi-Fi, USB tethering and phone hotspots.
+- the subnet of any network adapter of the flight PC, so networks with public addresses inside the LAN still work.
+
+Connections from the internet are rejected, even if the port is forwarded on your router or the Windows firewall allows it. In addition, choose **Private networks** in the Windows firewall dialog on first start.
+
+### Allowing all networks
+
+VPN overlay networks such as Tailscale (`100.64.0.0/10`) are not private ranges and are rejected by default. If you connect through such a network, open **Settings > Network** and click **Allow all networks**. A warning asks for confirmation, because Button Box has no password: with this option anyone who can reach the flight PC can press keys on it. Click **Local networks only** to switch back. The setting is saved, shared by all devices and also cleared by **Reset**.
+
+Every rejected connection is logged in the console window with its source address.
 
 ## Known limitations
 
@@ -172,6 +211,14 @@ Microsoft.AspNetCore.App 10.x.x
 ```
 
 If one is missing, download it from the [.NET 10 download page](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) (**.NET Runtime 10** and **ASP.NET Core Runtime 10**), or run the installer again. Once installation is complete, start Button Box again.
+
+### My tablet cannot open the page, or shows 403 Forbidden
+
+**A. Windows firewall.** Make sure Button Box is allowed for **Private networks**. Windows sometimes classifies a new Wi-Fi or hotspot as *Public*. Change the network profile to *Private* in the Windows network settings, or allow the app for public networks.
+
+**B. 403 Forbidden.** The tablet connects from a network that Button Box does not consider local, see [Network access and security](#network-access-and-security). The console window shows `Rejected connection from <address>`. If you trust that network (for example a VPN), enable **Allow all networks** in **Settings > Network**. Open Settings in a browser on the flight PC itself, because the rejected device cannot reach the page.
+
+**C. Wrong address.** Use the address printed in the console window, not one from a virtual adapter.
 
 ### A Button Box button does not trigger any action
 

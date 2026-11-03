@@ -13,11 +13,27 @@ builder.Services.AddHostedService(provider => provider.GetRequiredService<Condor
 builder.Services.AddSingleton<WindowTransparencyService>();
 builder.Services.AddSingleton<IKeyboardService, KeyboardService>();
 builder.Services.AddSingleton<BlockOrderStore>();
+builder.Services.AddSingleton<PageBreakStore>();
 builder.Services.AddSingleton<LayoutSettingsStore>();
 builder.Services.AddSingleton<ControlsStore>();
 builder.Services.AddScoped<LayoutService>();
+builder.Services.AddSingleton<NetworkSettingsStore>();
+builder.Services.AddSingleton<LocalNetworkFilter>();
 
 var app = builder.Build();
+
+var netFilter = app.Services.GetRequiredService<LocalNetworkFilter>();
+app.Use(async (ctx, next) =>
+{
+    var remote = ctx.Connection.RemoteIpAddress;
+    if (!netFilter.IsAllowed(remote))
+    {
+        app.Logger.LogWarning("Rejected connection from {Ip} (not a local network address)", remote);
+        ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+        return;
+    }
+    await next();
+});
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -41,7 +57,7 @@ app.Lifetime.ApplicationStarted.Register(() =>
         .Where(n => n.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up
                     && n.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback)
         .SelectMany(n => n.GetIPProperties().UnicastAddresses)
-        .Where(a => a.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+        .Where(a => LocalNetworkFilter.IsPrivate(a.Address))
         .Select(a => a.Address.ToString())
         .ToList();
 

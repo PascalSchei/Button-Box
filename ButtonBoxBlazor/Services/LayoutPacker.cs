@@ -1,5 +1,11 @@
 /// <summary>One page of the packed layout with absolutely positioned items.</summary>
-public sealed record LayoutPage(IReadOnlyList<GridItemDef> Items);
+public sealed record LayoutPage(
+    IReadOnlyList<GridItemDef> Items,
+    IReadOnlyList<string> BlockIds,
+    string Name = "",
+    int StartOrderIndex = 0,
+    int? BreakPosition = null,
+    string? BreakId = null);
 
 /// <summary>
 /// Skyline packing in sweeps: blocks go left to right at the first column where they fit, dropping onto the column heights below.
@@ -112,7 +118,7 @@ public static class LayoutPacker
         }
 
         public LayoutPage ToPage() =>
-            new([.. _placements.SelectMany(p => p.Block.Placed(p.Row, p.Col))]);
+            new([.. _placements.SelectMany(p => p.Block.Placed(p.Row, p.Col))], [.. _placements.Select(p => p.Block.Id)]);
 
         private int MaxHeight(int col, int width)
         {

@@ -21,7 +21,7 @@ public abstract class TelemetryComponentBase : ComponentBase, IDisposable
 
     private void OnTelemetryUpdated() => InvokeAsync(StateHasChanged);
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         Telemetry.Updated -= OnTelemetryUpdated;
         _refreshTimer?.Dispose();

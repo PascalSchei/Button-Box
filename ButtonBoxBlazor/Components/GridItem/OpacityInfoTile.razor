@@ -21,7 +21,7 @@
     [CascadingParameter]
     public ButtonDisplay Display { get; set; } = ButtonDisplay.Default;
 
-    private string TileStyle => Definition.Style + "color:var(--btn-color, white); background-color:color-mix(in srgb, var(--btn-color, black) 8%, black);";
+    private string TileStyle => Definition.Style;
 
     protected override void OnInitialized() => Transparency.Changed += OnChanged;
 
